@@ -1,0 +1,17 @@
+[package]
+name = "raytracer"
+version = "0.1.0"
+authors = ["mgc"]
+edition = "2021"
+publish = false
+
+[profile.release]
+debug = 1
+
+[dependencies]
+show-image = {version = "0.12.1", features = ["save"]}
+image = "0.24.2"
+num = "0.4.0"
+rand = {version = "0.8.5", features = ["small_rng"]}
+indicatif = "0.16.2"
+rayon = "1.5.2"
