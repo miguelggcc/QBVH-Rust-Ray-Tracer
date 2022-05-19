@@ -2,7 +2,7 @@ use crate::{
     aabb::AABB,
     material::Material,
     ray::{HitRecord, Hittable},
-    utilities::vector3::Vector3,
+    utilities::vector3::Vector3, object::Object, bvh::BVHNode,
 };
 
 #[derive(Clone)]
@@ -46,6 +46,7 @@ impl XYRect {
         }
     }
 }
+
 impl Hittable for XYRect {
     #[inline(always)]
     fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
@@ -174,3 +175,31 @@ impl Hittable for YZRect {
         )
     }
 }
+
+#[derive(Clone)]
+pub struct Prism {
+    faces: Box<Object>,
+    minimum: Vector3<f64>,
+    maximum: Vector3<f64>,
+}
+impl Prism{
+    pub fn new(p0: Vector3<f64>, p1: Vector3<f64>, material: Material) -> Self {
+        let mut faces = [
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone()),
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone()),
+            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone()),
+            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone()),
+            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone()),
+            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material.clone()),
+        ];
+        Self{faces: Box::new(BVHNode::from(&mut faces)), minimum: p0, maximum: p1}
+    }}
+
+    impl Hittable for Prism{
+        fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+self.faces.hit(&r,t_min,t_max)    }
+
+        fn bounding_box(&self) -> AABB {
+        AABB::new(self.minimum,self.maximum)
+    }
+    }

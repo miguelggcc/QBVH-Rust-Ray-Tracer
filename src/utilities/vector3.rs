@@ -120,7 +120,7 @@ impl Vector3<f64> {
         fmax(fmax(self.x, self.y), self.z)
     }
     #[allow(dead_code)]
-    pub fn to_color(self) -> [u8; 4] {
+    pub fn to_rgbau8(self) -> [u8; 4] {
         [
             (self.x * 255.0) as u8,
             (self.y * 255.0) as u8,
@@ -178,7 +178,7 @@ impl Vector3<f64> {
     #[allow(dead_code)]
     pub fn near_zero(&self) -> bool {
         let cutoff = 1e-8;
-        (self.x < cutoff) && (self.y < cutoff) && (self.z < cutoff)
+        (self.x.abs() < cutoff) && (self.y.abs() < cutoff) && (self.z.abs() < cutoff)
     }
 
     #[allow(dead_code)]

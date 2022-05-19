@@ -3,11 +3,17 @@ use crate::{aabb::AABB, material::Material, utilities::vector3::Vector3};
 pub struct Ray {
     pub origin: Vector3<f64>,
     pub direction: Vector3<f64>,
+    pub invd: Vector3<f64>,
 }
 
 impl Ray {
     pub fn new(origin: Vector3<f64>, direction: Vector3<f64>) -> Self {
-        Self { origin, direction }
+        let invd = Vector3::new(1.0 / direction.x, 1.0 / direction.y, 1.0 / direction.z);
+        Self {
+            origin,
+            direction,
+            invd,
+        }
     }
     pub fn at(&self, t: f64) -> Vector3<f64> {
         self.origin + self.direction * t

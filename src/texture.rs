@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
+use image::Rgb;
 use num::clamp;
 
 use crate::utilities::vector3::Vector3;
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Texture {
     SolidColor {
         albedo: Vector3<f64>,
@@ -16,6 +17,11 @@ pub enum Texture {
     },
     Image {
         image_v: Arc<Vec<u8>>,
+        width: f64,
+        height: f64,
+    },
+    HDRI {
+        image_v: Arc<Vec<Rgb<f32>>>,
         width: f64,
         height: f64,
     },
@@ -61,6 +67,36 @@ impl Texture {
                     pixel[0] as f64 / 255.0,
                     pixel[1] as f64 / 255.0,
                     pixel[2] as f64 / 255.0,
+                )
+            }
+            Self::HDRI {
+                image_v,
+                width,
+                height,
+            } => {
+                if image_v.is_empty() {
+                    return Vector3::new(1.0, 0.0, 1.0);
+                }
+                let u = clamp(u, 0.0, 1.0);
+                let v = 1.0 - clamp(v, 0.0, 1.0);
+
+                let mut i = (u * width) as usize;
+                let mut j = (v * height) as usize;
+                let w = *width as usize;
+                let h = *height as usize;
+
+                if i >= w  {
+                    i = w  - 1
+                }
+                if j >= h  {
+                    j = h  - 1
+                }
+
+                let pixel = image_v[(i + j * w )];
+                Vector3::new(
+                    pixel[0].min(1000.0) as f64,
+                    pixel[1].min(1000.0) as f64,
+                    pixel[2].min(1000.0) as f64,
                 )
             }
         }

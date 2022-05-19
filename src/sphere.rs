@@ -51,7 +51,7 @@ impl Hittable for Sphere {
                 }
             }
             let outward_normal = (r.at(root) - self.center) / self.radius;
-            let (u, v) = Self::get_sphere_uv(outward_normal);
+            let (u, v) = if self.material.textured(){Self::get_sphere_uv(outward_normal)} else{ (0.0,0.0)};
             Some(HitRecord::new(
                 r.at(root),
                 outward_normal,

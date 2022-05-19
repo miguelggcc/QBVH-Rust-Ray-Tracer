@@ -14,18 +14,17 @@ impl AABB {
         Self { minimum, maximum }
     }
     pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> bool {
-        let invd = Vector3::new(
-            1.0 / r.direction.x,
-            1.0 / r.direction.y,
-            1.0 / r.direction.z,
-        );
-        let t0 = (self.minimum - r.origin) * invd;
-        let t1 = (self.maximum - r.origin) * invd;
+        let t0 = (self.minimum - r.origin) * r.invd;
+        let t1 = (self.maximum - r.origin) * r.invd;
 
         let hit_min = fmax(t_min, t0.min(t1).max_axis());
         let hit_max = fmin(t_max, t0.max(t1).min_axis());
 
         hit_max > hit_min
+    }
+
+    pub fn centroid2(&self, axis: u8) -> f64 {
+        self.minimum.get_axis(axis) + self.maximum.get_axis(axis)
     }
 }
 

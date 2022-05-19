@@ -13,5 +13,5 @@ show-image = {version = "0.12.1", features = ["save"]}
 image = "0.24.2"
 num = "0.4.0"
 rand = {version = "0.8.5", features = ["small_rng"]}
-indicatif = "0.16.2"
+indicatif = {version = "0.16.2", features = ["rayon"]}
 rayon = "1.5.2"

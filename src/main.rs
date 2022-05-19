@@ -10,6 +10,7 @@ mod sphere;
 mod texture;
 mod utilities;
 mod world;
+mod transformations;
 
 use utilities::vector3::Vector3;
 
@@ -27,7 +28,7 @@ use crate::{scenes::Scenes, world::World};
 #[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut pixel_data = vec![0; WIDTH as usize * HEIGHT as usize * 4];
-    let scene = Scenes::Basic;
+    let scene = Scenes::CornellBox;
     let start = Instant::now();
     let world = World::new(scene, WIDTH as f64, HEIGHT as f64, AA, DEPTH);
     world.draw(&mut pixel_data);
