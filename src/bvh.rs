@@ -22,12 +22,12 @@ impl BVHNode {
         fn sort_objects(objects: &mut [Object], axis: u8) {
             objects.sort_by(|object1, object2| {
                 (object1.bounding_box().centroid2(axis))
-                    .partial_cmp(&(&object2.bounding_box().centroid2(axis)))
+                    .partial_cmp(&object2.bounding_box().centroid2(axis))
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         if objects.len() == 1 {
-            return objects[0].clone();
+            objects[0].clone()
         } else {
             // From @cbiffle
             fn axis_range(objects: &mut [Object], axis: u8) -> f64 {
@@ -83,18 +83,18 @@ impl Hittable for BVHNode {
         match (&hit_left, &hit_right) {
             (Some(left), Some(right)) => {
                 if left.t < right.t {
-                    return hit_left;
+                    hit_left
                 } else {
-                    return hit_right;
+                    hit_right
                 }
             }
-            (Some(_), None) => return hit_left,
-            (None, Some(_)) => return hit_right,
+            (Some(_), None) => hit_left,
+            (None, Some(_)) => hit_right,
             _ => Option::None,
         }
     }
 
-    fn bounding_box(&self) -> AABB {
-        self.bounding_box
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }

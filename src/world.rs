@@ -94,25 +94,19 @@ fn ray_color(
 }
 
 fn get_color(color: &mut Vector3<f64>, samples_per_pixel: f64) -> [u8; 4] {
-
-    let mut r  = color.x / samples_per_pixel;
-    let mut g = color.y / samples_per_pixel; 
+    let mut r = color.x / samples_per_pixel;
+    let mut g = color.y / samples_per_pixel;
     let mut b = color.z / samples_per_pixel;
 
-    r = r*(1.0+r/1.0)/(1.0+r);
-    g = g*(1.0+g/1.0)/(1.0+g);
-    b = b*(1.0+b/1.0)/(1.0+b);
-    *color = Vector3::new(
-        (r).sqrt(),
-        (g).sqrt(),
-        (b).sqrt(),
-    );
+    r = r * (1.0 + r / 1.0) / (1.0 + r);
+    g = g * (1.0 + g / 1.0) / (1.0 + g);
+    b = b * (1.0 + b / 1.0) / (1.0 + b);
+    *color = Vector3::new((r).sqrt(), (g).sqrt(), (b).sqrt());
     color.to_rgbau8()
-
 }
-    /*     //algorithm created by John Hable for Uncharted 2
+/*     //algorithm created by John Hable for Uncharted 2
    let mut r  = color.x / samples_per_pixel;
-   let mut g = color.y / samples_per_pixel; 
+   let mut g = color.y / samples_per_pixel;
    let mut b = color.z / samples_per_pixel;
    r = ((r*(0.15*r+0.05)+0.004)/(r*(0.15*r+0.5)+0.06))-0.02/0.30;
    g = ((g*(0.15*g+0.05)+0.004)/(g*(0.15*g+0.5)+0.06))-0.02/0.30;

@@ -20,7 +20,7 @@ pub enum Texture {
         width: f64,
         height: f64,
     },
-    HDRI {
+    Hdri {
         image_v: Arc<Vec<Rgb<f32>>>,
         width: f64,
         height: f64,
@@ -69,7 +69,7 @@ impl Texture {
                     pixel[2] as f64 / 255.0,
                 )
             }
-            Self::HDRI {
+            Self::Hdri {
                 image_v,
                 width,
                 height,
@@ -85,14 +85,14 @@ impl Texture {
                 let w = *width as usize;
                 let h = *height as usize;
 
-                if i >= w  {
-                    i = w  - 1
+                if i >= w {
+                    i = w - 1
                 }
-                if j >= h  {
-                    j = h  - 1
+                if j >= h {
+                    j = h - 1
                 }
 
-                let pixel = image_v[(i + j * w )];
+                let pixel = image_v[(i + j * w)];
                 Vector3::new(
                     pixel[0].min(1000.0) as f64,
                     pixel[1].min(1000.0) as f64,

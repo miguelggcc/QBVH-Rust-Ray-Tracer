@@ -1,8 +1,10 @@
 use crate::{
     aabb::AABB,
+    bvh::BVHNode,
     material::Material,
+    object::Object,
     ray::{HitRecord, Hittable},
-    utilities::vector3::Vector3, object::Object, bvh::BVHNode,
+    utilities::vector3::Vector3,
 };
 
 #[derive(Clone)]
@@ -13,6 +15,8 @@ pub struct XYRect {
     pub y1: f64,
     pub k: f64,
     pub material: Material,
+    pub normal: Vector3<f64>,
+    bounding_box: AABB,
 }
 #[derive(Clone)]
 pub struct XZRect {
@@ -22,6 +26,8 @@ pub struct XZRect {
     pub z1: f64,
     pub k: f64,
     pub material: Material,
+    pub normal: Vector3<f64>,
+    bounding_box: AABB,
 }
 
 #[derive(Clone)]
@@ -32,10 +38,31 @@ pub struct YZRect {
     pub z1: f64,
     pub k: f64,
     pub material: Material,
+    pub normal: Vector3<f64>,
+    bounding_box: AABB,
 }
 
 impl XYRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, material: Material) -> Self {
+    pub fn new(
+        x0: f64,
+        x1: f64,
+        y0: f64,
+        y1: f64,
+        k: f64,
+        material: Material,
+        flip_normal: bool,
+    ) -> Self {
+        let bounding_box = AABB::new(
+            Vector3::new(x0, y0, k - 0.0001),
+            Vector3::new(x1, y1, k + 0.0001),
+        );
+
+        let normal = if flip_normal {
+            Vector3::new(0.0, 0.0, -1.0)
+        } else {
+            Vector3::new(0.0, 0.0, 1.0)
+        };
+
         Self {
             x0,
             x1,
@@ -43,6 +70,8 @@ impl XYRect {
             y1,
             k,
             material,
+            normal,
+            bounding_box,
         }
     }
 }
@@ -65,7 +94,7 @@ impl Hittable for XYRect {
         let v = (y - self.y0) / (self.y1 - self.y0);
         Some(HitRecord::new(
             r.at(t),
-            Vector3::new(0.0, 0.0, 1.0),
+            self.normal,
             t,
             u,
             v,
@@ -74,16 +103,30 @@ impl Hittable for XYRect {
         ))
     }
 
-    fn bounding_box(&self) -> AABB {
-        AABB::new(
-            Vector3::new(self.x0, self.y0, self.k - 0.0001),
-            Vector3::new(self.x1, self.y1, self.k + 0.0001),
-        )
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }
 
 impl XZRect {
-    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, material: Material) -> Self {
+    pub fn new(
+        x0: f64,
+        x1: f64,
+        z0: f64,
+        z1: f64,
+        k: f64,
+        material: Material,
+        flip_normal: bool,
+    ) -> Self {
+        let bounding_box = AABB::new(
+            Vector3::new(x0, k - 0.0001, z0),
+            Vector3::new(x1, k + 0.0001, z1),
+        );
+        let normal = if flip_normal {
+            Vector3::new(0.0, -1.0, 0.0)
+        } else {
+            Vector3::new(0.0, 1.0, 0.0)
+        };
         Self {
             x0,
             x1,
@@ -91,6 +134,8 @@ impl XZRect {
             z1,
             k,
             material,
+            normal,
+            bounding_box,
         }
     }
 }
@@ -112,7 +157,7 @@ impl Hittable for XZRect {
         let v = (z - self.z0) / (self.z1 - self.z0);
         Some(HitRecord::new(
             r.at(t),
-            Vector3::new(0.0, 1.0, 0.0),
+            self.normal,
             t,
             u,
             v,
@@ -121,16 +166,30 @@ impl Hittable for XZRect {
         ))
     }
 
-    fn bounding_box(&self) -> AABB {
-        AABB::new(
-            Vector3::new(self.x0, self.k - 0.0001, self.z0),
-            Vector3::new(self.x1, self.k + 0.0001, self.z1),
-        )
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }
 
 impl YZRect {
-    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, material: Material) -> Self {
+    pub fn new(
+        y0: f64,
+        y1: f64,
+        z0: f64,
+        z1: f64,
+        k: f64,
+        material: Material,
+        flip_normal: bool,
+    ) -> Self {
+        let bounding_box = AABB::new(
+            Vector3::new(k - 0.0001, y0, z0),
+            Vector3::new(k + 0.0001, y1, z1),
+        );
+        let normal = if flip_normal {
+            Vector3::new(-1.0, 0.0, 0.0)
+        } else {
+            Vector3::new(1.0, 0.0, 0.0)
+        };
         Self {
             y0,
             y1,
@@ -138,6 +197,8 @@ impl YZRect {
             z1,
             k,
             material,
+            normal,
+            bounding_box,
         }
     }
 }
@@ -159,7 +220,7 @@ impl Hittable for YZRect {
         let v = (z - self.z0) / (self.z1 - self.z0);
         Some(HitRecord::new(
             r.at(t),
-            Vector3::new(1.0, 0.0, 0.0),
+            self.normal,
             t,
             u,
             v,
@@ -168,38 +229,40 @@ impl Hittable for YZRect {
         ))
     }
 
-    fn bounding_box(&self) -> AABB {
-        AABB::new(
-            Vector3::new(self.k - 0.0001, self.y0, self.z0),
-            Vector3::new(self.k + 0.0001, self.y1, self.z1),
-        )
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }
 
 #[derive(Clone)]
 pub struct Prism {
     faces: Box<Object>,
-    minimum: Vector3<f64>,
-    maximum: Vector3<f64>,
+    bounding_box: AABB,
 }
-impl Prism{
+impl Prism {
     pub fn new(p0: Vector3<f64>, p1: Vector3<f64>, material: Material) -> Self {
         let mut faces = [
-            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone()),
-            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone()),
-            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone()),
-            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone()),
-            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone()),
-            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material.clone()),
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone(), false),
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone(), true),
+            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone(), false),
+            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone(), true),
+            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone(), false),
+            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material, true),
         ];
-        Self{faces: Box::new(BVHNode::from(&mut faces)), minimum: p0, maximum: p1}
-    }}
-
-    impl Hittable for Prism{
-        fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-self.faces.hit(&r,t_min,t_max)    }
-
-        fn bounding_box(&self) -> AABB {
-        AABB::new(self.minimum,self.maximum)
+        let bounding_box = AABB::new(p0, p1);
+        Self {
+            faces: Box::new(BVHNode::from(&mut faces)),
+            bounding_box,
+        }
     }
+}
+
+impl Hittable for Prism {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.faces.hit(r, t_min, t_max)
     }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
+    }
+}

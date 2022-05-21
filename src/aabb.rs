@@ -3,7 +3,8 @@ use crate::utilities::math::fmax;
 use crate::utilities::math::fmin;
 use crate::Vector3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct AABB {
     pub minimum: Vector3<f64>,
     pub maximum: Vector3<f64>,
@@ -28,7 +29,7 @@ impl AABB {
     }
 }
 
-pub fn surrounding_box(box0: AABB, box1: AABB) -> AABB {
+pub fn surrounding_box(box0: &AABB, box1: &AABB) -> AABB {
     let small = Vector3::new(
         fmin(box0.minimum.x, box1.minimum.x),
         fmin(box0.minimum.y, box1.minimum.y),

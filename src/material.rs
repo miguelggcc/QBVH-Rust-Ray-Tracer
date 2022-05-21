@@ -8,22 +8,23 @@ use crate::{
 #[derive(Clone)]
 pub enum Material {
     Lambertian { albedo: Vector3<f64> },
-    TexturedLambertian{ texture: Texture},
+    TexturedLambertian { texture: Texture },
     Metal { albedo: Vector3<f64>, fuzz: f64 },
     Dielectric { index_of_refraction: f64 },
     DiffuseLight { texture: Texture },
-    HDRI { texture: Texture },
+    Hdri { texture: Texture },
+    Isotropic { color: Vector3<f64> },
 }
 
 impl Material {
     pub fn scatter(&self, r_in: &Ray, hit: &HitRecord, rng: &mut ThreadRng) -> Option<Ray> {
         match self {
-            Material::Lambertian {albedo:_ } => {
+            Material::Lambertian { albedo: _ } => {
                 let mut scatter_direction = hit.normal + Vector3::random_unit_vector(rng);
                 if scatter_direction.near_zero() {
                     scatter_direction = hit.normal;
                 }
-                let scattered = Ray::new(hit.p, scatter_direction);
+                let scattered = Ray::new(hit.p, scatter_direction.normalize_nomut());
                 Some(scattered)
             }
             Material::TexturedLambertian { texture: _ } => {
@@ -34,7 +35,7 @@ impl Material {
                 let scattered = Ray::new(hit.p, scatter_direction);
                 Some(scattered)
             }
-            
+
             Material::Metal { albedo: _, fuzz } => {
                 let reflected = Vector3::reflect(r_in.direction.normalize_nomut(), hit.normal);
                 let scattered = Ray::new(
@@ -73,15 +74,34 @@ impl Material {
 
                 Some(Ray::new(hit.p, direction))
             }
+            Material::Isotropic { color: _ } => {
+                let scattered = Ray::new(hit.p, Vector3::random_in_unit_sphere(rng));
+                Some(scattered)
+            }
             _ => None,
+        }
+    }
+
+    pub fn scattering_pdf(&self, r_in: &Ray, hit: &HitRecord, scattered: &Ray) -> f64 {
+        match self {
+            Material::Lambertian { albedo: _ } => {
+                let cosine = Vector3::dot(hit.normal, scattered.direction);
+                if cosine<0.0{
+                    0.0
+                } else{
+                    cosine/std::f64::consts::PI
+                }
+            }
+            _ => 1.0,
         }
     }
 
     pub fn albedo(&self, hit: &HitRecord) -> Vector3<f64> {
         match self {
-            Material::Lambertian{albedo}=>*albedo,
+            Material::Lambertian { albedo } => *albedo,
             Material::TexturedLambertian { texture } => texture.value(hit.u, hit.v, hit.p),
             Material::Metal { albedo, fuzz: _ } => *albedo,
+            Material::Isotropic { color } => *color,
             _ => Vector3::new(1.0, 1.0, 1.0),
         }
     }
@@ -89,18 +109,18 @@ impl Material {
     pub fn emit(&self, hit: &HitRecord) -> Vector3<f64> {
         match self {
             Material::DiffuseLight { texture } => texture.value(hit.u, hit.v, hit.p),
-            Material::HDRI { texture } => texture.value(hit.u, hit.v, hit.p),
+            Material::Hdri { texture } => texture.value(hit.u, hit.v, hit.p),
             _ => Vector3::new(0.0, 0.0, 0.0),
         }
     }
 
-    pub fn textured(&self)->bool{
-        match self{
-            Material::TexturedLambertian { texture:_ }=> true,
-            Material::DiffuseLight { texture:_ }=>true,
-            Material::HDRI { texture: _ }=>true,
-            _=>false
-        }
+    pub fn textured(&self) -> bool {
+        matches!(
+            self,
+            Material::TexturedLambertian { texture: _ }
+                | Material::DiffuseLight { texture: _ }
+                | Material::Hdri { texture: _ }
+        )
     }
 }
 

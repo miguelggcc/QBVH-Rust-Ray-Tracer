@@ -9,13 +9,17 @@ pub struct Sphere {
     pub center: Vector3<f64>,
     pub radius: f64,
     pub material: Material,
+    bounding_box: AABB,
 }
 impl Sphere {
     pub fn new(center: Vector3<f64>, radius: f64, material: Material) -> Self {
+        let radius_v = Vector3::new(radius, radius, radius);
+        let bounding_box = AABB::new(center - radius_v, center + radius_v);
         Self {
             center,
             radius,
             material,
+            bounding_box,
         }
     }
 
@@ -51,7 +55,11 @@ impl Hittable for Sphere {
                 }
             }
             let outward_normal = (r.at(root) - self.center) / self.radius;
-            let (u, v) = if self.material.textured(){Self::get_sphere_uv(outward_normal)} else{ (0.0,0.0)};
+            let (u, v) = if self.material.textured() {
+                Self::get_sphere_uv(outward_normal)
+            } else {
+                (0.0, 0.0)
+            };
             Some(HitRecord::new(
                 r.at(root),
                 outward_normal,
@@ -64,8 +72,7 @@ impl Hittable for Sphere {
         }
     }
 
-    fn bounding_box(&self) -> AABB {
-        let radius_v = Vector3::new(self.radius, self.radius, self.radius);
-        AABB::new(self.center - radius_v, self.center + radius_v)
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }
