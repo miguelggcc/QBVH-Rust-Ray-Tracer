@@ -30,8 +30,8 @@ impl Camera {
         let viewport_height = 2.0 * h;
         let viewport_width = viewport_height * aspect_ratio;
 
-        let w = (lookfrom - lookat).normalize_nomut();
-        let u = Vector3::cross(vup, w).normalize_nomut();
+        let w = (lookfrom - lookat).norm();
+        let u = Vector3::cross(vup, w).norm();
         let v = Vector3::cross(w, u);
 
         let horizontal = u * viewport_width * focus_dist;

@@ -1,9 +1,12 @@
+use rand::prelude::ThreadRng;
+use rand::Rng;
+
 use crate::{
     aabb::AABB,
     bvh::BVHNode,
     material::Material,
-    object::Object,
-    ray::{HitRecord, Hittable},
+    object::{Object, Hittable},
+    ray::{HitRecord, Ray},
     utilities::vector3::Vector3,
 };
 
@@ -74,6 +77,24 @@ impl XYRect {
             bounding_box,
         }
     }
+
+    pub fn pdf_value(&self, origin: Vector3<f64>, v: Vector3<f64>) -> f64 {
+        if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f64::MAX) {
+            let area = (self.x1 - self.x0) * (self.y1 - self.y0);
+            let distance_2 = hit.t * hit.t * v.magnitude2();
+            let cosine = Vector3::dot(v, hit.normal).abs() / v.magnitude();
+            return distance_2 / (cosine * area);
+        }
+        0.0
+    }
+
+    pub fn random(&self, origin: Vector3<f64>, rng: &mut ThreadRng) -> Vector3<f64> {
+        Vector3::new(
+            rng.gen_range(self.x0..self.x1),
+            rng.gen_range(self.y0..self.y1),
+            self.k,
+        ) - origin
+    }
 }
 
 impl Hittable for XYRect {
@@ -137,6 +158,25 @@ impl XZRect {
             normal,
             bounding_box,
         }
+        
+    }
+
+    pub fn pdf_value(&self, origin: Vector3<f64>, v: Vector3<f64>) -> f64 {
+        if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f64::MAX) {
+            let area = (self.x1 - self.x0) * (self.z1 - self.z0);
+            let distance_2 = hit.t * hit.t * v.magnitude2();
+            let cosine = Vector3::dot(v, hit.normal).abs() / v.magnitude();
+            return distance_2 / (cosine * area);
+        }
+        0.0
+    }
+
+    pub fn random(&self, origin: Vector3<f64>, rng: &mut ThreadRng) -> Vector3<f64> {
+        Vector3::new(
+            rng.gen_range(self.x0..self.x1),
+            self.k,
+            rng.gen_range(self.z0..self.z1),
+        ) - origin
     }
 }
 impl Hittable for XZRect {

@@ -1,13 +1,18 @@
+//use enum_dispatch::enum_dispatch;
+use rand::prelude::ThreadRng;
+
 use crate::{
     aabb::AABB,
     bvh::BVHNode,
+    constant_medium::ConstantMedium,
     material::Material,
-    ray::Hittable,
+    ray::{Ray, HitRecord},
     rectangle::{Prism, XYRect, XZRect, YZRect},
     sphere::Sphere,
     transformations::{RotateY, Translate},
-    utilities::vector3::Vector3, constant_medium::ConstantMedium,
+    utilities::vector3::Vector3,
 };
+//#[enum_dispatch(Hittable)] //removed enum_dispatch crate for easier profiling
 #[derive(Clone)]
 pub enum Object {
     Sphere(Sphere),
@@ -70,8 +75,8 @@ impl Object {
         Object::Prism(Prism::new(p0, p1, material))
     }
 
-    pub fn build_constant_medium(self, d: f64, color: Vector3<f64>)->Self{
-        Object::ConstantMedium(ConstantMedium::new(self,d,color))
+    pub fn build_constant_medium(self, d: f64, color: Vector3<f64>) -> Self {
+        Object::ConstantMedium(ConstantMedium::new(self, d, color))
     }
     pub fn translate(self, offset: Vector3<f64>) -> Self {
         Object::Translate(Translate::new(self, offset))
@@ -79,8 +84,32 @@ impl Object {
     pub fn rotate_y(self, angle: f64) -> Self {
         Object::RotateY(RotateY::new(self, angle))
     }
+
+    pub fn pdf_value(&self, o: Vector3<f64>, direction: Vector3<f64>) -> f64 {
+        match self {
+            Self::XZRect(rectangle) => rectangle.pdf_value(o, direction),
+            Self::Sphere(sphere) => sphere.pdf_value(o, direction),
+            Self::XYRect(rectangle) => rectangle.pdf_value(o,direction),
+            _ => 1.0,
+        }
+    }
+    pub fn random(&self, o: Vector3<f64>, rng: &mut ThreadRng) -> Vector3<f64> {
+        match self {
+            Self::XZRect(rectangle) => rectangle.random(o, rng),
+            Self::Sphere(sphere) => sphere.random(o, rng),
+            Self::XYRect(rectangle) => rectangle.random(o,rng),
+            _ => Vector3::new(1.0, 1.0, 1.0),
+        }
+    }
 }
 
+//#[enum_dispatch]
+pub trait Hittable {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn bounding_box(&self) -> &AABB;
+}
+
+//enum_dispatch crate creates this code automatically, removed for easier profiling
 impl Hittable for Object {
     #[inline(always)]
     fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<crate::ray::HitRecord> {

@@ -1,18 +1,18 @@
-use crate::{aabb::AABB, material::Material, utilities::vector3::Vector3};
+use crate::{material::Material, utilities::vector3::Vector3};
 
 pub struct Ray {
     pub origin: Vector3<f64>,
     pub direction: Vector3<f64>,
-    pub invd: Vector3<f64>,
+    pub inv_d: Vector3<f64>,
 }
 
 impl Ray {
     pub fn new(origin: Vector3<f64>, direction: Vector3<f64>) -> Self {
-        let invd = Vector3::new(1.0 / direction.x, 1.0 / direction.y, 1.0 / direction.z);
+        let inv_d = Vector3::new(1.0 / direction.x, 1.0 / direction.y, 1.0 / direction.z);
         Self {
             origin,
             direction,
-            invd,
+            inv_d,
         }
     }
     pub fn at(&self, t: f64) -> Vector3<f64> {
@@ -53,8 +53,4 @@ impl<'a> HitRecord<'a> {
             material,
         }
     }
-}
-pub trait Hittable {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
-    fn bounding_box(&self) -> &AABB;
 }

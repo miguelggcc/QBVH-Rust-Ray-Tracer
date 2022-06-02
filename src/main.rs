@@ -4,6 +4,7 @@ mod camera;
 mod constant_medium;
 mod material;
 mod object;
+mod pdf;
 mod ray;
 mod rectangle;
 mod scenes;
@@ -36,18 +37,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "basic",
                     "basic_checker",
                     "hdri",
+                    "hdri_sun",
                     "rect_light",
                     "cornell_box",
-                    "volumes"
+                    "volumes",
                 ])
-                .default_value("basic"),arg!(-a --AA <AA>).help("Anti-aliasing: samples per pixel").default_value("200").validator(|a| a.parse::<i32>())]
-        )
+                .default_value("cornell_box"),
+            arg!(-a --AA <AA>)
+                .help("Anti-aliasing: samples per pixel")
+                .default_value("500")
+                .validator(|a| a.parse::<i32>()),
+        ])
         .get_matches();
 
     let scene = match commands.value_of("scene") {
         Some("basic") => Scenes::Basic,
         Some("basic_checker") => Scenes::BasicChecker,
         Some("hdri") => Scenes::HDRITest,
+        Some("hdri_sun") => Scenes::HDRISun,
         Some("rect_light") => Scenes::RectangleLight,
         Some("cornell_box") => Scenes::CornellBox,
         Some("volumes") => Scenes::Volumes,
@@ -56,7 +63,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let aa: i32 = commands.value_of_t("AA").expect("'AA' is required and drawing will fail if its missing");
+    let aa: i32 = commands
+        .value_of_t("AA")
+        .expect("'AA' is required and drawing will fail if its missing");
 
     let mut pixel_data = vec![0; WIDTH as usize * HEIGHT as usize * 4];
     let start = Instant::now();
@@ -69,7 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a window with default options and display the image.
     let window = show_image::create_window(
-        "image",
+        "RayTracing, ctrl+S to save",
         WindowOptions::default().set_size(Some([WIDTH, HEIGHT])),
     )
     .map_err(|e| e.to_string())?;

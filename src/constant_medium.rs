@@ -1,6 +1,7 @@
+use crate::object::Hittable;
 use crate::ray::HitRecord;
 use crate::utilities::vector3::Vector3;
-use crate::{aabb::AABB, material::Material, object::Object, ray::Hittable};
+use crate::{aabb::AABB, material::Material, object::Object};
 use rand::Rng;
 
 #[derive(Clone)]
@@ -10,10 +11,14 @@ pub struct ConstantMedium {
     phase_function: Material,
 }
 
-impl ConstantMedium{
-    pub fn new(boundary: Object, d: f64, color: Vector3<f64>)->Self{
+impl ConstantMedium {
+    pub fn new(boundary: Object, d: f64, color: Vector3<f64>) -> Self {
         let phase_function = Material::Isotropic { color };
-        Self { boundary: Box::new(boundary), neg_inv_density: -1.0/d, phase_function }
+        Self {
+            boundary: Box::new(boundary),
+            neg_inv_density: -1.0 / d,
+            phase_function,
+        }
     }
 }
 

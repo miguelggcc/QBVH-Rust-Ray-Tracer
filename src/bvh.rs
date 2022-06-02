@@ -1,7 +1,7 @@
 use crate::{
     aabb::{surrounding_box, AABB},
-    object::Object,
-    ray::{HitRecord, Hittable},
+    object::{Object, Hittable},
+    ray::{HitRecord},
 };
 
 #[derive(Clone)]
@@ -90,7 +90,7 @@ impl Hittable for BVHNode {
             }
             (Some(_), None) => hit_left,
             (None, Some(_)) => hit_right,
-            _ => Option::None,
+            _ => None,
         }
     }
 

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use num::{Float, Num};
 use rand::{prelude::ThreadRng, Rng};
 use std::{
@@ -18,32 +20,26 @@ impl<T> Vector3<T>
 where
     T: Num + Copy + MulAssign + DivAssign + Borrow<T>,
 {
-    #[allow(dead_code)]
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x, y, z }
     }
 
-    #[allow(dead_code)]
     pub fn to_array(self) -> [T; 3] {
         [self.x, self.y, self.z]
     }
-    #[allow(dead_code)]
     pub fn multiply_scalar(&mut self, scalar: T) {
         self.x *= scalar;
         self.y *= scalar;
         self.z *= scalar;
     }
-    #[allow(dead_code)]
     pub fn divide_scalar(&mut self, scalar: T) {
         self.x /= scalar;
         self.y /= scalar;
         self.z /= scalar;
     }
-    #[allow(dead_code)]
     pub fn dot(v1: Self, v2: Self) -> T {
         v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
     }
-    #[allow(dead_code)]
     pub fn cross(v1: Self, v2: Self) -> Self {
         Self {
             x: v1.y * v2.z - v1.z * v2.y,
@@ -57,15 +53,12 @@ impl<T> Vector3<T>
 where
     T: Num + Float + DivAssign + MulAssign,
 {
-    #[allow(dead_code)]
     pub fn magnitude(&self) -> T {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
-    #[allow(dead_code)]
     pub fn magnitude2(&self) -> T {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
-    #[allow(dead_code)]
     pub fn normalize(&mut self) -> Self {
         let mag = self.magnitude();
         if mag.is_zero() {
@@ -76,14 +69,13 @@ where
         self.z /= mag;
         *self
     }
-    pub fn normalize_nomut(&self) -> Self {
+    pub fn norm(&self) -> Self {
         let mag = self.magnitude();
         if mag.is_zero() {
             return *self;
         }
         Vector3::new(self.x / mag, self.y / mag, self.z / mag)
     }
-    #[allow(dead_code)]
     pub fn limit(&mut self, max: T) {
         if self.magnitude() > max {
             self.normalize();
@@ -91,7 +83,6 @@ where
         }
     }
 
-    #[allow(dead_code)]
     pub fn get_axis(&self, axis: u8) -> T {
         match axis {
             0 => self.x,
@@ -102,24 +93,19 @@ where
 }
 
 impl Vector3<f64> {
-    #[allow(dead_code)]
     pub fn min(&self, v: Self) -> Self {
         Vector3::new(fmin(self.x, v.x), fmin(self.y, v.y), fmin(self.z, v.z))
     }
-    #[allow(dead_code)]
     pub fn max(&self, v: Self) -> Self {
         Vector3::new(fmax(self.x, v.x), fmax(self.y, v.y), fmax(self.z, v.z))
     }
-    #[allow(dead_code)]
     pub fn min_axis(&self) -> f64 {
         fmin(fmin(self.x, self.y), self.z)
     }
 
-    #[allow(dead_code)]
     pub fn max_axis(&self) -> f64 {
         fmax(fmax(self.x, self.y), self.z)
     }
-    #[allow(dead_code)]
     pub fn to_rgbau8(self) -> [u8; 4] {
         [
             (self.x * 255.0) as u8,
@@ -128,7 +114,6 @@ impl Vector3<f64> {
             255,
         ]
     }
-    #[allow(dead_code)]
     pub fn random_vec(min: f64, max: f64, rng: &mut ThreadRng) -> Self {
         Self::new(
             rng.gen_range(min..max),
@@ -137,7 +122,6 @@ impl Vector3<f64> {
         )
     }
 
-    #[allow(dead_code)]
     pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Self {
         loop {
             let p = Vector3::random_vec(-1.0, 1.0, rng);
@@ -148,7 +132,6 @@ impl Vector3<f64> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn random_in_unit_disk(rng: &mut ThreadRng) -> Self {
         loop {
             let p = Vector3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
@@ -159,13 +142,11 @@ impl Vector3<f64> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn random_unit_vector(rng: &mut ThreadRng) -> Self {
         let mut v = Vector3::random_in_unit_sphere(rng);
         v.normalize()
     }
 
-    #[allow(dead_code)]
     pub fn random_in_hemisphere(normal: Vector3<f64>, rng: &mut ThreadRng) -> Self {
         let v = Vector3::random_in_unit_sphere(rng);
         if Vector3::dot(v, normal) > 0.0 {
@@ -175,18 +156,27 @@ impl Vector3<f64> {
         }
     }
 
-    #[allow(dead_code)]
+    pub fn random_cosine_direction(rng: &mut ThreadRng) -> Self {
+        let r1 = rng.gen::<f64>();
+        let r2 = rng.gen::<f64>();
+        let z = (1.0 - r2).sqrt();
+
+        let phi = 2.0 * std::f64::consts::PI * r1;
+        let x = phi.cos() * r2.sqrt();
+        let y = phi.sin() * r2.sqrt();
+
+        Vector3::new(x, y, z)
+    }
+
     pub fn near_zero(&self) -> bool {
         let cutoff = 1e-8;
         (self.x.abs() < cutoff) && (self.y.abs() < cutoff) && (self.z.abs() < cutoff)
     }
 
-    #[allow(dead_code)]
     pub fn reflect(v: Self, n: Self) -> Self {
         v - n * (2.0 * Vector3::dot(v, n))
     }
 
-    #[allow(dead_code)]
     pub fn refract(v: Self, n: Self, etai_over_etat: f64) -> Self {
         let cos_theta = Vector3::dot(v * (-1.0), n).min(1.0);
         let r_out_perp = (v + n * cos_theta) * etai_over_etat;

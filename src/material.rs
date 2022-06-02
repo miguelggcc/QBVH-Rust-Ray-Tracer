@@ -1,10 +1,12 @@
 use rand::{prelude::ThreadRng, Rng};
+use crate::pdf::{PDFCosine, PDFSphere};
 
 use crate::{
     ray::{HitRecord, Ray},
     texture::Texture,
-    utilities::{math::fmin, vector3::Vector3},
+    utilities::{math::fmin, vector3::Vector3}, pdf::PDFType,
 };
+
 #[derive(Clone)]
 pub enum Material {
     Lambertian { albedo: Vector3<f64> },
@@ -17,36 +19,24 @@ pub enum Material {
 }
 
 impl Material {
-    pub fn scatter(&self, r_in: &Ray, hit: &HitRecord, rng: &mut ThreadRng) -> Option<Ray> {
+    pub fn scatter(&self, r_in: &Ray, hit: &HitRecord, rng: &mut ThreadRng) -> Option<ScatterRecord> {
         match self {
-            Material::Lambertian { albedo: _ } => {
-                let mut scatter_direction = hit.normal + Vector3::random_unit_vector(rng);
-                if scatter_direction.near_zero() {
-                    scatter_direction = hit.normal;
-                }
-                let scattered = Ray::new(hit.p, scatter_direction.normalize_nomut());
-                Some(scattered)
+            Material::Lambertian { albedo } => {
+                let pdf_cosine =  PDFType::PDFCosine{pdf: PDFCosine::new(hit.normal)};
+                Some(ScatterRecord::Scatter { pdf: pdf_cosine, attenuation: *albedo})
             }
-            Material::TexturedLambertian { texture: _ } => {
-                let mut scatter_direction = hit.normal + Vector3::random_unit_vector(rng);
-                if scatter_direction.near_zero() {
-                    scatter_direction = hit.normal;
-                }
-                let scattered = Ray::new(hit.p, scatter_direction);
-                Some(scattered)
+            Material::TexturedLambertian { texture } => {
+                let pdf_cosine =  PDFType::PDFCosine{pdf: PDFCosine::new(hit.normal)};
+                Some(ScatterRecord::Scatter { pdf: pdf_cosine, attenuation: texture.value(hit.u, hit.v, hit.p)})
             }
 
-            Material::Metal { albedo: _, fuzz } => {
-                let reflected = Vector3::reflect(r_in.direction.normalize_nomut(), hit.normal);
-                let scattered = Ray::new(
+            Material::Metal { albedo, fuzz } => {
+                let reflected = Vector3::reflect(r_in.direction.norm(), hit.normal);
+                let specular_ray = Ray::new(
                     hit.p,
                     reflected + Vector3::random_in_unit_sphere(rng) * (*fuzz),
                 );
-                if Vector3::dot(scattered.direction, hit.normal) > 0.0 {
-                    Some(scattered)
-                } else {
-                    None
-                }
+    Some(ScatterRecord::Specular { specular_ray, attenuation: *albedo })
             }
 
             Material::Dielectric {
@@ -58,7 +48,7 @@ impl Material {
                     *index_of_refraction
                 };
 
-                let unit_direction = r_in.direction.normalize_nomut();
+                let unit_direction = r_in.direction.norm();
                 let cos_theta = fmin(Vector3::dot(unit_direction * (-1.0), hit.normal), 1.0);
                 let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
@@ -72,43 +62,40 @@ impl Material {
                     Vector3::refract(unit_direction, hit.normal, refraction_ratio)
                 };
 
-                Some(Ray::new(hit.p, direction))
+                Some(ScatterRecord::Specular{specular_ray: Ray::new(hit.p, direction),attenuation: Vector3::new(1.0,1.0,1.0)})
             }
-            Material::Isotropic { color: _ } => {
-                let scattered = Ray::new(hit.p, Vector3::random_in_unit_sphere(rng));
-                Some(scattered)
-            }
+            Material::Isotropic { color } => {
+                let pdf_sphere =  PDFType::PDFSphere{pdf: PDFSphere::new()};
+                Some(ScatterRecord::Scatter { pdf: pdf_sphere, attenuation: *color})
+             }
             _ => None,
         }
     }
 
-    pub fn scattering_pdf(&self, r_in: &Ray, hit: &HitRecord, scattered: &Ray) -> f64 {
+    pub fn scattering_pdf(&self, _r_in: &Ray, hit: &HitRecord, scattered: &Ray) -> f64 {
         match self {
             Material::Lambertian { albedo: _ } => {
-                let cosine = Vector3::dot(hit.normal, scattered.direction);
-                if cosine<0.0{
-                    0.0
-                } else{
-                    cosine/std::f64::consts::PI
-                }
+                let cosine = Vector3::dot(hit.normal, scattered.direction.norm());
+                    (cosine/std::f64::consts::PI).max(0.0)
+                
+            }
+
+            Material::TexturedLambertian { texture:_} => {
+                let cosine = Vector3::dot(hit.normal, scattered.direction.norm());
+                    (cosine/std::f64::consts::PI).max(0.0)
+                
+            }
+
+            Material::Isotropic{color:_}=>{
+                1.0/(4.0*std::f64::consts::PI)
             }
             _ => 1.0,
         }
     }
 
-    pub fn albedo(&self, hit: &HitRecord) -> Vector3<f64> {
-        match self {
-            Material::Lambertian { albedo } => *albedo,
-            Material::TexturedLambertian { texture } => texture.value(hit.u, hit.v, hit.p),
-            Material::Metal { albedo, fuzz: _ } => *albedo,
-            Material::Isotropic { color } => *color,
-            _ => Vector3::new(1.0, 1.0, 1.0),
-        }
-    }
-
     pub fn emit(&self, hit: &HitRecord) -> Vector3<f64> {
         match self {
-            Material::DiffuseLight { texture } => texture.value(hit.u, hit.v, hit.p),
+            Material::DiffuseLight { texture } => if hit.front_face{texture.value(hit.u, hit.v, hit.p)} else{ Vector3::new(0.0, 0.0, 0.0)},
             Material::Hdri { texture } => texture.value(hit.u, hit.v, hit.p),
             _ => Vector3::new(0.0, 0.0, 0.0),
         }
@@ -124,7 +111,20 @@ impl Material {
     }
 }
 
+impl Default for Material{
+    fn default()->Self{
+        Self::Lambertian {
+            albedo: Vector3::new(0.73, 0.73, 0.73),
+        }
+    }
+}
+
 fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
     let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
     r0 * r0 + (1.0 - r0 * r0) * (1.0 - cosine).powi(5)
+}
+
+pub enum ScatterRecord<'a>{
+    Specular{specular_ray: Ray, attenuation: Vector3<f64>},
+    Scatter {pdf: PDFType<'a>, attenuation: Vector3<f64>}
 }
