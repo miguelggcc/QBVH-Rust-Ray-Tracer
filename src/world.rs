@@ -124,7 +124,7 @@ fn ray_color(
             }
         }
 
-        /*  let unit_direction = scatter_ray.direction.normalize_nomut();
+        /*  let unit_direction = scatter_ray.direction.norm();
         let t = 0.5 * (unit_direction.y + 1.0);
         return color * (Vector3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vector3::new(0.5, 0.7, 1.0) * t);*/
         return color * background;
@@ -137,10 +137,12 @@ fn get_color(color: &mut Vector3<f64>, samples_per_pixel: f64) -> [u8; 4] {
     let mut g = color.y / samples_per_pixel;
     let mut b = color.z / samples_per_pixel;
 
-    r = r * (1.0 + r / 1.0) / (1.0 + r);
-    g = g * (1.0 + g / 1.0) / (1.0 + g);
-    b = b * (1.0 + b / 1.0) / (1.0 + b);
-    *color = Vector3::new((r).sqrt(), (g).sqrt(), (b).sqrt());
+    // change exposition
+    let exp = 1.0;
+    r = r * (1.0 + r / exp) / (1.0 + r);
+    g = g * (1.0 + g / exp) / (1.0 + g);
+    b = b * (1.0 + b / exp) / (1.0 + b);
+    *color = Vector3::new((r).sqrt(), (g).sqrt(), (b).sqrt()); //fast gamma correction
     color.to_rgbau8()
 }
 /*     //algorithm created by John Hable for Uncharted 2
