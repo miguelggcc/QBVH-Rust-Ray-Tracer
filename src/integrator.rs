@@ -43,13 +43,7 @@ impl World {
         let pb = ProgressBar::new(n);
         pb.set_style(ProgressStyle::default_bar().template("{bar:40.green/white}  {percent} %"));
         pb.set_draw_delta(n / 100);
-        /*let light = [
-            Object::build_xz_rect(213.0, 343.0, 227.0, 332.0, 554.0, Material::default(), true), Object::build_sphere(
-                                                                                                     Vector3::new(190.0, 90.0, 190.0),
-                                                                                                     90.0,
-                                                                                                     Material::default()
-                                                                                                 )
-        ];*/
+
         let light = [Object::build_xz_rect(
             -0.5,
             0.5,
