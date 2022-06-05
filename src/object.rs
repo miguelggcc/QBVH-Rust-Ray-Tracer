@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 //use enum_dispatch::enum_dispatch;
 use rand::prelude::ThreadRng;
 
@@ -6,10 +8,11 @@ use crate::{
     bvh::BVHNode,
     constant_medium::ConstantMedium,
     material::Material,
-    ray::{Ray, HitRecord},
+    ray::{HitRecord, Ray},
     rectangle::{Prism, XYRect, XZRect, YZRect},
     sphere::Sphere,
     transformations::{RotateY, Translate},
+    triangle_mesh::{Mesh, Triangle},
     utilities::vector3::Vector3,
 };
 //#[enum_dispatch(Hittable)] //removed enum_dispatch crate for easier profiling
@@ -24,6 +27,8 @@ pub enum Object {
     ConstantMedium(ConstantMedium),
     Translate(Translate),
     RotateY(RotateY),
+    Triangle(Triangle),
+    Mesh(Mesh),
 }
 #[allow(dead_code)]
 impl Object {
@@ -84,12 +89,42 @@ impl Object {
     pub fn rotate_y(self, angle: f64) -> Self {
         Object::RotateY(RotateY::new(self, angle))
     }
+    pub fn get_triangles_vertices(
+        p0: Vector3<f64>,
+        p1: Vector3<f64>,
+        p2: Vector3<f64>,
+        material: Material,
+    ) -> Self {
+        Object::Triangle(Triangle::new(p0, p1, p2, material))
+    }
+    pub fn set_normals(
+        &mut self,
+        normal0: Vector3<f64>,
+        normal1: Vector3<f64>,
+        normal2: Vector3<f64>,
+    ) {
+        match self {
+            Self::Triangle(triangle) => {
+                triangle.set_normals(normal0, normal1, normal2);
+            }
+            _ => (),
+        }
+    }
+
+    pub fn build_mesh(
+        filename: &str,
+        scale: f64,
+        position: Vector3<f64>,
+        material: Material,
+    ) -> Self {
+        Object::Mesh(Mesh::load(filename, scale, position, material))
+    }
 
     pub fn pdf_value(&self, o: Vector3<f64>, direction: Vector3<f64>) -> f64 {
         match self {
             Self::XZRect(rectangle) => rectangle.pdf_value(o, direction),
             Self::Sphere(sphere) => sphere.pdf_value(o, direction),
-            Self::XYRect(rectangle) => rectangle.pdf_value(o,direction),
+            Self::XYRect(rectangle) => rectangle.pdf_value(o, direction),
             _ => 1.0,
         }
     }
@@ -97,7 +132,7 @@ impl Object {
         match self {
             Self::XZRect(rectangle) => rectangle.random(o, rng),
             Self::Sphere(sphere) => sphere.random(o, rng),
-            Self::XYRect(rectangle) => rectangle.random(o,rng),
+            Self::XYRect(rectangle) => rectangle.random(o, rng),
             _ => Vector3::new(1.0, 1.0, 1.0),
         }
     }
@@ -123,6 +158,8 @@ impl Hittable for Object {
             Object::ConstantMedium(constant_medium) => constant_medium.hit(r, t_min, t_max),
             Object::Translate(translate) => translate.hit(r, t_min, t_max),
             Object::RotateY(rotate_y) => rotate_y.hit(r, t_min, t_max),
+            Object::Triangle(triangle) => triangle.hit(r, t_min, t_max),
+            Object::Mesh(mesh) => mesh.hit(r, t_min, t_max),
         }
     }
 
@@ -137,6 +174,8 @@ impl Hittable for Object {
             Object::ConstantMedium(constant_medium) => constant_medium.bounding_box(),
             Object::Translate(translate) => translate.bounding_box(),
             Object::RotateY(rotate_y) => rotate_y.bounding_box(),
+            Object::Triangle(triangle) => triangle.bounding_box(),
+            Object::Mesh(mesh) => mesh.bounding_box(),
         }
     }
 }

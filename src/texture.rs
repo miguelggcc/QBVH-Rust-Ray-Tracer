@@ -93,11 +93,7 @@ impl Texture {
                 }
 
                 let pixel = image_v[(i + j * w)];
-                Vector3::new(
-                    pixel[0] as f64,
-                    pixel[1] as f64,
-                    pixel[2] as f64,
-                )
+                Vector3::new(pixel[0] as f64, pixel[1] as f64, pixel[2] as f64)
             }
         }
     }

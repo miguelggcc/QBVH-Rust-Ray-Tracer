@@ -3,8 +3,9 @@ use rand::{prelude::ThreadRng, Rng};
 use crate::{
     aabb::AABB,
     material::Material,
+    object::Hittable,
     ray::{HitRecord, Ray},
-    utilities::{onb::ONB, vector3::Vector3}, object::Hittable,
+    utilities::{onb::ONB, vector3::Vector3},
 };
 #[derive(Clone)]
 pub struct Sphere {

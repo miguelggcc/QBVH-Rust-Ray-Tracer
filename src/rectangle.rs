@@ -5,7 +5,7 @@ use crate::{
     aabb::AABB,
     bvh::BVHNode,
     material::Material,
-    object::{Object, Hittable},
+    object::{Hittable, Object},
     ray::{HitRecord, Ray},
     utilities::vector3::Vector3,
 };
@@ -158,7 +158,6 @@ impl XZRect {
             normal,
             bounding_box,
         }
-        
     }
 
     pub fn pdf_value(&self, origin: Vector3<f64>, v: Vector3<f64>) -> f64 {
@@ -166,6 +165,7 @@ impl XZRect {
             let area = (self.x1 - self.x0) * (self.z1 - self.z0);
             let distance_2 = hit.t * hit.t * v.magnitude2();
             let cosine = Vector3::dot(v, hit.normal).abs() / v.magnitude();
+
             return distance_2 / (cosine * area);
         }
         0.0

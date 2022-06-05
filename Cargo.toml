@@ -16,4 +16,4 @@ rand = {version = "0.8.5", features = ["small_rng"]}
 indicatif = {version = "0.16.2", features = ["rayon"]}
 rayon = "1.5.2"
 clap = {version = "3.1.18", features = ["cargo"]}
-enum_dispatch = "0.3.8"
+tobj = "3.2.2"

@@ -15,6 +15,8 @@ pub enum Scenes {
     RectangleLight,
     CornellBox,
     Volumes,
+    Balls,
+    Model3D,
 }
 
 impl Scenes {
@@ -199,7 +201,7 @@ impl Scenes {
                 (objects, camera, Vector3::new(0.5, 0.7, 1.0))
             }
             Self::HDRITest => {
-                let path = Path::new("sun.hdr");
+                let path = Path::new("HDRIs/sun.hdr");
                 let image = File::open(path).unwrap();
 
                 let bufreader = BufReader::new(image);
@@ -247,7 +249,7 @@ impl Scenes {
                     albedo: Vector3::new(1.0, 0.86, 0.57),
                     fuzz: 0.0,
                 };*/
-                let path = Path::new("marble4.jpg");
+                let path = Path::new("textures/marble4.jpg");
                 let image = image::open(path)
                     .map_err(|e| format!("Failed to read image from {:?}: {}", path, e))
                     .unwrap();
@@ -271,7 +273,7 @@ impl Scenes {
             }
 
             Self::HDRISun => {
-                let path = Path::new("sun.hdr");
+                let path = Path::new("HDRIs/sun.hdr");
                 let image = File::open(path).unwrap();
 
                 let bufreader = BufReader::new(image);
@@ -319,7 +321,7 @@ impl Scenes {
                     albedo: Vector3::new(1.0, 0.86, 0.57),
                     fuzz: 0.0,
                 };
-                let path = Path::new("marble4.jpg");
+                let path = Path::new("textures/marble4.jpg");
                 let image = image::open(path)
                     .map_err(|e| format!("Failed to read image from {:?}: {}", path, e))
                     .unwrap();
@@ -343,7 +345,7 @@ impl Scenes {
             }
 
             Self::RectangleLight => {
-                let path = Path::new("marble.jpg");
+                let path = Path::new("textures/marble.jpg");
                 let image = image::open(path)
                     .map_err(|e| format!("Failed to read image from {:?}: {}", path, e))
                     .unwrap();
@@ -624,18 +626,15 @@ impl Scenes {
                     Vector3::new(0.2, 0.4, 0.9),
                 ));
 
-                let boundary = Object::build_sphere(
-                    Vector3::new(0.0, 0.0, 0.0),
-                    5000.0,
-                    Material::default(),
-                );
-                 objects.push(Object::build_constant_medium(
+                let boundary =
+                    Object::build_sphere(Vector3::new(0.0, 0.0, 0.0), 5000.0, Material::default());
+                objects.push(Object::build_constant_medium(
                     boundary,
                     0.0001,
                     Vector3::new(1.0, 1.0, 1.0),
                 ));
 
-                let path = Path::new("earthmap.jpg");
+                let path = Path::new("textures/earthmap.jpg");
                 let image = image::open(path)
                     .map_err(|e| format!("Failed to read image from {:?}: {}", path, e))
                     .unwrap();
@@ -647,7 +646,11 @@ impl Scenes {
                         height: image.height() as f64,
                     },
                 };
-                objects.push(Object::build_sphere(Vector3::new(280.0,240.0,400.0), 100.0,emat));
+                objects.push(Object::build_sphere(
+                    Vector3::new(280.0, 240.0, 400.0),
+                    100.0,
+                    emat,
+                ));
 
                 let mut box_of_balls = vec![];
 
@@ -668,6 +671,165 @@ impl Scenes {
                         .translate(Vector3::new(-100.0, 270.0, 395.0)),
                 );
 
+                (objects, camera, Vector3::new(0.0, 0.0, 0.0))
+            }
+            Self::Balls => {
+                let look_from = Vector3::new(378.0, 178.0, -640.0);
+                let look_at = Vector3::new(320.0, 133.0, 60.0);
+                let vup = Vector3::new(0.0, 1.0, 0.0);
+                let dist_to_focus = 700.0;
+                let aperture = 3.5;
+
+                let camera = Camera::new(
+                    look_from,
+                    look_at,
+                    vup,
+                    40.0,
+                    width / height,
+                    aperture,
+                    dist_to_focus,
+                );
+
+                let red = Material::Lambertian {
+                    albedo: Vector3::new(0.65, 0.05, 0.05),
+                };
+                let white = Material::Lambertian {
+                    albedo: Vector3::new(0.73, 0.73, 0.73),
+                };
+                let green = Material::Lambertian {
+                    albedo: Vector3::new(0.12, 0.45, 0.15),
+                };
+
+                let difflight = Material::DiffuseLight {
+                    texture: Texture::SolidColor {
+                        albedo: Vector3::new(4.50, 4.50, 4.50),
+                    },
+                };
+
+                let mut objects = vec![Object::build_yz_rect(
+                    0.0, 355.0, 0.0, 555.0, 755.0, green, false,
+                )];
+                objects.push(Object::build_yz_rect(
+                    0.0, 355.0, -400.0, 555.0, 0.0, red, false,
+                ));
+                objects.push(Object::build_xz_rect(
+                    107.5, 647.5, 127.0, 372.0, 354.9, difflight, true,
+                ));
+                objects.push(Object::build_xz_rect(
+                    0.0,
+                    755.0,
+                    -400.0,
+                    555.0,
+                    0.0,
+                    white.clone(),
+                    false,
+                ));
+                objects.push(Object::build_xz_rect(
+                    0.0,
+                    755.0,
+                    -400.0,
+                    555.0,
+                    355.0,
+                    white.clone(),
+                    false,
+                ));
+                objects.push(Object::build_xy_rect(
+                    0.0,
+                    755.0,
+                    0.0,
+                    355.0,
+                    555.0,
+                    white.clone(),
+                    false,
+                ));
+                let aluminum = Material::Metal {
+                    albedo: Vector3::new(0.8, 0.85, 0.88),
+                    fuzz: 0.0,
+                };
+
+                for i in 0..7 {
+                    let sphere = Object::build_sphere(
+                        Vector3::new(68.0 + i as f64 * 104.0, 55.0, 0.0 + i as f64 * 72.0),
+                        55.0,
+                        Material::Blend {
+                            material1: Box::new(Material::Lambertian {
+                                albedo: Vector3::new(0.12, 0.15, 0.45),
+                            }),
+                            material2: Box::new(aluminum.clone()),
+                            ratio: 1.0 - i as f64 * 1.0 / 6.0,
+                        },
+                    );
+                    objects.push(sphere);
+                }
+
+                (objects, camera, Vector3::new(0.0, 0.0, 0.0))
+            }
+            Self::Model3D => {
+                let look_from = Vector3::new(0.0, 0.1, 2.0);
+                let look_at = Vector3::new(0.0, 0.1, 0.0);
+                let vup = Vector3::new(0.0, 1.0, 0.0);
+                let dist_to_focus = 2.0;
+                let aperture = 0.02;
+
+                let camera = Camera::new(
+                    look_from,
+                    look_at,
+                    vup,
+                    10.0,
+                    width / height,
+                    aperture,
+                    dist_to_focus,
+                );
+
+                let difflight = Material::DiffuseLight {
+                    texture: Texture::SolidColor {
+                        albedo: Vector3::new(1.80, 1.80, 1.80),
+                    },
+                };
+                let gold = Material::Metal {
+                    albedo: Vector3::new(1.0, 0.86, 0.57),
+                    fuzz: 0.5,
+                };
+
+                let skull = Object::build_mesh(
+                    "objs/Upper_skull.obj",
+                    0.1,
+                    Vector3::new(0.0, 0.0, 0.0),
+                    Material::Dielectric {
+                        index_of_refraction: 1.5,
+                    },
+                );
+                let mut objects =
+                    vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];
+                objects.push(Object::build_xz_rect(
+                    -2.0,
+                    2.0,
+                    -2.0,
+                    2.0,
+                    0.0,
+                    Material::default(),
+                    true,
+                ));
+                objects.push(Object::build_mesh(
+                    "objs/dragon.obj",
+                    0.01,
+                    Vector3::new(0.1, 0.0, 0.0),
+                    gold,
+                ));
+                objects.push(Object::build_xz_rect(
+                    -0.5, 0.5, -0.5, 0.5, 0.6, difflight, true,
+                ));
+                objects.push(Object::build_xy_rect(
+                    -0.5,
+                    0.5,
+                    -2.0,
+                    2.5,
+                    -1.0,
+                    Material::Lambertian {
+                        albedo: Vector3::new(0.1, 0.15, 0.25),
+                    },
+                    true,
+                ));
                 (objects, camera, Vector3::new(0.0, 0.0, 0.0))
             }
         }

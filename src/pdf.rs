@@ -2,13 +2,16 @@ use rand::prelude::{SliceRandom, ThreadRng};
 use rand::Rng;
 
 use crate::object::Object;
+use crate::utilities::math::fmax;
 use crate::utilities::onb::ONB;
 use crate::Vector3;
 
+const PI: f64 = std::f64::consts::PI;
 pub enum PDFType<'a> {
     PDFObj { pdf: PDF<'a> },
     PDFCosine { pdf: PDFCosine },
-    PDFSphere {pdf: PDFSphere},
+    PDFSphere { pdf: PDFSphere },
+    PDFBlinnPhongSpec { pdf: PDFBlinnPhongSpec },
 }
 
 impl PDFType<'_> {
@@ -20,16 +23,21 @@ impl PDFType<'_> {
                     .iter()
                     .map(|object| object.pdf_value(pdf.o, direction))
                     .sum();
+
                 acc / pdf.objects.len() as f64
             }
             Self::PDFCosine { pdf } => {
                 let cosine = Vector3::dot(direction.norm(), pdf.onb.w);
-
-                    (cosine / std::f64::consts::PI).max(0.0)
-                
+                (cosine / PI).max(0.0)
             }
-            Self::PDFSphere{pdf:_}=>{
-                1.0/(4.0*std::f64::consts::PI)
+            Self::PDFSphere { pdf: _ } => 1.0 / (4.0 * PI),
+            Self::PDFBlinnPhongSpec { pdf } => {
+                let random_normal =
+                    ((pdf.r_in_direction * (-1.0)).norm() + direction.norm()).norm();
+                let cosine = fmax(Vector3::dot(random_normal, pdf.normal), 0.0);
+                let normal_pdf = (pdf.exponent + 1.0) / (2.0 * PI) * cosine.powf(pdf.exponent);
+
+                normal_pdf / (4.0 * Vector3::dot(pdf.r_in_direction * (-1.0), random_normal))
             }
         }
     }
@@ -38,7 +46,16 @@ impl PDFType<'_> {
         match self {
             Self::PDFObj { pdf } => pdf.objects.choose(rng).unwrap().random(pdf.o, rng),
             Self::PDFCosine { pdf } => pdf.onb.local(Vector3::random_cosine_direction(rng)),
-            Self::PDFSphere {pdf:_} => Vector3::random_in_unit_sphere(rng)
+            Self::PDFSphere { pdf: _ } => Vector3::random_in_unit_sphere(rng),
+            Self::PDFBlinnPhongSpec { pdf } => {
+                let direction = pdf
+                    .onb
+                    .local(Vector3::random_cosine_direction_exponent(pdf.exponent, rng));
+                if Vector3::dot(direction, pdf.normal) < 0.0 {
+                    return Vector3::new(1.0, 1.0, 1.0);
+                }
+                direction
+            }
         }
     }
 }
@@ -67,13 +84,32 @@ impl PDFCosine {
     }
 }
 
-pub struct PDFSphere {
-}
+pub struct PDFSphere {}
 
 impl PDFSphere {
     pub fn new() -> Self {
+        Self {}
+    }
+}
+
+pub struct PDFBlinnPhongSpec {
+    r_in_direction: Vector3<f64>,
+    onb: ONB,
+    normal: Vector3<f64>,
+    exponent: f64,
+}
+
+impl PDFBlinnPhongSpec {
+    pub fn new(r_in_direction: Vector3<f64>, normal: Vector3<f64>, exponent: f64) -> Self {
+        let reflected = Vector3::reflect(r_in_direction.norm(), normal);
+
+        let onb = ONB::build_from(reflected);
+
         Self {
-            
+            r_in_direction,
+            onb,
+            normal,
+            exponent,
         }
     }
 }

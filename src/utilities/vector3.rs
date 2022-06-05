@@ -168,6 +168,18 @@ impl Vector3<f64> {
         Vector3::new(x, y, z)
     }
 
+    pub fn random_cosine_direction_exponent(exponent: f64, rng: &mut ThreadRng) -> Self {
+        let r1 = rng.gen::<f64>();
+        let r2 = rng.gen::<f64>().powf(1.0 / (exponent + 1.0));
+        let sin_theta = (1.0 - r2 * r2).sqrt();
+
+        let phi = 2.0 * std::f64::consts::PI * r1;
+        let x = phi.cos() * sin_theta;
+        let y = phi.sin() * sin_theta;
+        let z = r2;
+        Vector3::new(x, y, z)
+    }
+
     pub fn near_zero(&self) -> bool {
         let cutoff = 1e-8;
         (self.x.abs() < cutoff) && (self.y.abs() < cutoff) && (self.z.abs() < cutoff)

@@ -1,7 +1,7 @@
 use crate::{
     aabb::AABB,
-    object::{Object, Hittable},
-    ray::{ Ray},
+    object::{Hittable, Object},
+    ray::Ray,
     utilities::vector3::Vector3,
 };
 

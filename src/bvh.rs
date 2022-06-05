@@ -1,7 +1,7 @@
 use crate::{
     aabb::{surrounding_box, AABB},
-    object::{Object, Hittable},
-    ray::{HitRecord},
+    object::{Hittable, Object},
+    ray::HitRecord,
 };
 
 #[derive(Clone)]

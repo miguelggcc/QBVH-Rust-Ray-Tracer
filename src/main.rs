@@ -11,8 +11,9 @@ mod scenes;
 mod sphere;
 mod texture;
 mod transformations;
+mod triangle_mesh;
 mod utilities;
-mod world;
+mod integrator;
 
 use utilities::vector3::Vector3;
 
@@ -25,7 +26,7 @@ const DEPTH: i32 = 50;
 
 use show_image::{event, ImageInfo, ImageView, WindowOptions};
 
-use crate::{scenes::Scenes, world::World};
+use crate::{scenes::Scenes, integrator::World};
 
 #[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,6 +42,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "rect_light",
                     "cornell_box",
                     "volumes",
+                    "balls",
+                    "3Dmodel",
                 ])
                 .default_value("cornell_box"),
             arg!(-a --AA <AA>)
@@ -58,6 +61,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("rect_light") => Scenes::RectangleLight,
         Some("cornell_box") => Scenes::CornellBox,
         Some("volumes") => Scenes::Volumes,
+        Some("balls") => Scenes::Balls,
+        Some("3Dmodel") => Scenes::Model3D,
         _ => {
             unreachable!()
         }
