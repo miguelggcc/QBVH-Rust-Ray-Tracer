@@ -6,17 +6,18 @@ use crate::Vector3;
 #[derive(Clone)]
 #[allow(clippy::upper_case_acronyms)]
 pub struct AABB {
-    pub minimum: Vector3<f64>,
-    pub maximum: Vector3<f64>,
+    pub minimum: Vector3<f32>,
+    pub maximum: Vector3<f32>,
 }
 
 impl AABB {
-    pub fn new(minimum: Vector3<f64>, maximum: Vector3<f64>) -> Self {
+    pub fn new(minimum: Vector3<f32>, maximum: Vector3<f32>) -> Self {
         Self { minimum, maximum }
     }
-    pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> bool {
-        let t0 = (self.minimum - r.origin) * r.inv_d;
-        let t1 = (self.maximum - r.origin) * r.inv_d;
+    pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> bool {
+        let inv_d = Vector3::new(1.0 / r.direction.x, 1.0 / r.direction.y, 1.0 / r.direction.z);
+        let t0 = (self.minimum - r.origin) * inv_d;
+        let t1 = (self.maximum - r.origin) * inv_d;
 
         let hit_min = fmax(t_min, t0.min(t1).max_axis());
         let hit_max = fmin(t_max, t0.max(t1).min_axis());
@@ -24,7 +25,7 @@ impl AABB {
         hit_max > hit_min
     }
 
-    pub fn centroid2(&self, axis: u8) -> f64 {
+    pub fn centroid2(&self, axis: u8) -> f32 {
         self.minimum.get_axis(axis) + self.maximum.get_axis(axis)
     }
 }

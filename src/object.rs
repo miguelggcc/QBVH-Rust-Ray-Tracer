@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 //use enum_dispatch::enum_dispatch;
 use rand::prelude::ThreadRng;
@@ -32,16 +31,16 @@ pub enum Object {
 }
 #[allow(dead_code)]
 impl Object {
-    pub fn build_sphere(center: Vector3<f64>, radius: f64, material: Material) -> Self {
+    pub fn build_sphere(center: Vector3<f32>, radius: f32, material: Material) -> Self {
         Object::Sphere(Sphere::new(center, radius, material))
     }
 
     pub fn build_xz_rect(
-        x0: f64,
-        x1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
+        x0: f32,
+        x1: f32,
+        z0: f32,
+        z1: f32,
+        k: f32,
         material: Material,
         flip_normal: bool,
     ) -> Self {
@@ -49,11 +48,11 @@ impl Object {
     }
 
     pub fn build_yz_rect(
-        y0: f64,
-        y1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
+        y0: f32,
+        y1: f32,
+        z0: f32,
+        z1: f32,
+        k: f32,
         material: Material,
         flip_normal: bool,
     ) -> Self {
@@ -61,11 +60,11 @@ impl Object {
     }
 
     pub fn build_xy_rect(
-        x0: f64,
-        x1: f64,
-        y0: f64,
-        y1: f64,
-        k: f64,
+        x0: f32,
+        x1: f32,
+        y0: f32,
+        y1: f32,
+        k: f32,
         material: Material,
         flip_normal: bool,
     ) -> Self {
@@ -76,51 +75,48 @@ impl Object {
         Object::BVHNode(BVHNode::new(left, right, bounding_box))
     }
 
-    pub fn build_prism(p0: Vector3<f64>, p1: Vector3<f64>, material: Material) -> Self {
+    pub fn build_prism(p0: Vector3<f32>, p1: Vector3<f32>, material: Material) -> Self {
         Object::Prism(Prism::new(p0, p1, material))
     }
 
-    pub fn build_constant_medium(self, d: f64, color: Vector3<f64>) -> Self {
+    pub fn build_constant_medium(self, d: f32, color: Vector3<f32>) -> Self {
         Object::ConstantMedium(ConstantMedium::new(self, d, color))
     }
-    pub fn translate(self, offset: Vector3<f64>) -> Self {
+    pub fn translate(self, offset: Vector3<f32>) -> Self {
         Object::Translate(Translate::new(self, offset))
     }
-    pub fn rotate_y(self, angle: f64) -> Self {
+    pub fn rotate_y(self, angle: f32) -> Self {
         Object::RotateY(RotateY::new(self, angle))
     }
     pub fn get_triangles_vertices(
-        p0: Vector3<f64>,
-        p1: Vector3<f64>,
-        p2: Vector3<f64>,
+        p0: Vector3<f32>,
+        p1: Vector3<f32>,
+        p2: Vector3<f32>,
         material: Material,
     ) -> Self {
         Object::Triangle(Triangle::new(p0, p1, p2, material))
     }
     pub fn set_normals(
         &mut self,
-        normal0: Vector3<f64>,
-        normal1: Vector3<f64>,
-        normal2: Vector3<f64>,
+        normal0: Vector3<f32>,
+        normal1: Vector3<f32>,
+        normal2: Vector3<f32>,
     ) {
-        match self {
-            Self::Triangle(triangle) => {
-                triangle.set_normals(normal0, normal1, normal2);
-            }
-            _ => (),
+        if let Self::Triangle(triangle) = self {
+            triangle.set_normals(normal0, normal1, normal2);
         }
     }
 
     pub fn build_mesh(
         filename: &str,
-        scale: f64,
-        position: Vector3<f64>,
+        scale: f32,
+        position: Vector3<f32>,
         material: Material,
     ) -> Self {
         Object::Mesh(Mesh::load(filename, scale, position, material))
     }
 
-    pub fn pdf_value(&self, o: Vector3<f64>, direction: Vector3<f64>) -> f64 {
+    pub fn pdf_value(&self, o: Vector3<f32>, direction: Vector3<f32>) -> f32 {
         match self {
             Self::XZRect(rectangle) => rectangle.pdf_value(o, direction),
             Self::Sphere(sphere) => sphere.pdf_value(o, direction),
@@ -128,7 +124,7 @@ impl Object {
             _ => 1.0,
         }
     }
-    pub fn random(&self, o: Vector3<f64>, rng: &mut ThreadRng) -> Vector3<f64> {
+    pub fn random(&self, o: Vector3<f32>, rng: &mut ThreadRng) -> Vector3<f32> {
         match self {
             Self::XZRect(rectangle) => rectangle.random(o, rng),
             Self::Sphere(sphere) => sphere.random(o, rng),
@@ -140,14 +136,14 @@ impl Object {
 
 //#[enum_dispatch]
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
     fn bounding_box(&self) -> &AABB;
 }
 
 //enum_dispatch crate creates this code automatically, removed for easier profiling
 impl Hittable for Object {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<crate::ray::HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<crate::ray::HitRecord> {
         match self {
             Object::Sphere(sphere) => sphere.hit(r, t_min, t_max),
             Object::XZRect(rectangle) => rectangle.hit(r, t_min, t_max),

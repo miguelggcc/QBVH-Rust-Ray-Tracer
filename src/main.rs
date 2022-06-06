@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut pixel_data = vec![0; WIDTH as usize * HEIGHT as usize * 4];
     let start = Instant::now();
-    let world = World::new(scene, WIDTH as f64, HEIGHT as f64, aa, DEPTH);
+    let world = World::new(scene, WIDTH as f32, HEIGHT as f32, aa, DEPTH);
     world.draw(&mut pixel_data);
     let duration = start.elapsed();
     println!("Time elapsed: {:?}", duration);

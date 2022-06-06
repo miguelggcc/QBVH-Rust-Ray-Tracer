@@ -8,22 +8,22 @@ use crate::{
     texture::Texture,
     utilities::{math::fmin, vector3::Vector3},
 };
-const PI: f64 = std::f64::consts::PI;
+const PI: f32 = std::f32::consts::PI;
 
 #[derive(Clone)]
 pub enum Material {
     Lambertian {
-        albedo: Vector3<f64>,
+        albedo: Vector3<f32>,
     },
     TexturedLambertian {
         texture: Texture,
     },
     Metal {
-        albedo: Vector3<f64>,
-        fuzz: f64,
+        albedo: Vector3<f32>,
+        fuzz: f32,
     },
     Dielectric {
-        index_of_refraction: f64,
+        index_of_refraction: f32,
     },
     DiffuseLight {
         texture: Texture,
@@ -32,17 +32,17 @@ pub enum Material {
         texture: Texture,
     },
     Isotropic {
-        color: Vector3<f64>,
+        color: Vector3<f32>,
     },
     BlinnPhong {
-        color: Vector3<f64>,
-        m_specular: f64,
-        exponent: f64,
+        color: Vector3<f32>,
+        m_specular: f32,
+        exponent: f32,
     },
     Blend {
         material1: Box<Material>,
         material2: Box<Material>,
-        ratio: f64,
+        ratio: f32,
     },
 }
 
@@ -105,7 +105,7 @@ impl Material {
                 let cannot_refract = refraction_ratio * sin_theta > 1.0;
 
                 let direction = if cannot_refract
-                    || reflectance(cos_theta, refraction_ratio) > rng.gen::<f64>()
+                    || reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
                 {
                     Vector3::reflect(unit_direction, hit.normal)
                 } else {
@@ -131,7 +131,7 @@ impl Material {
                 m_specular,
                 exponent,
             } => {
-                let is_specular = rng.gen::<f64>() < *m_specular;
+                let is_specular = rng.gen::<f32>() < *m_specular;
                 if is_specular {
                     Some(ScatterRecord::Scatter {
                         pdf: PDFType::PDFBlinnPhongSpec {
@@ -154,7 +154,7 @@ impl Material {
                 material2,
                 ratio,
             } => {
-                if rng.gen::<f64>() < *ratio {
+                if rng.gen::<f32>() < *ratio {
                     material1.scatter(r_in, hit, rng)
                 } else {
                     material2.scatter(r_in, hit, rng)
@@ -170,7 +170,7 @@ impl Material {
         hit: &HitRecord,
         scattered: &Ray,
         rng: &mut ThreadRng,
-    ) -> f64 {
+    ) -> f32 {
         match self {
             Material::Lambertian { albedo: _ } => {
                 let cosine = Vector3::dot(hit.normal, scattered.direction.norm());
@@ -189,7 +189,7 @@ impl Material {
                 m_specular,
                 exponent,
             } => {
-                if rng.gen::<f64>() < *m_specular {
+                if rng.gen::<f32>() < *m_specular {
                     let random_normal =
                         ((r_in.direction * (-1.0)).norm() + scattered.direction.norm()).norm();
                     let cosine = fmax(Vector3::dot(random_normal, hit.normal), 0.0);
@@ -204,7 +204,7 @@ impl Material {
         }
     }
 
-    pub fn emit(&self, hit: &HitRecord) -> Vector3<f64> {
+    pub fn emit(&self, hit: &HitRecord) -> Vector3<f32> {
         match self {
             Material::DiffuseLight { texture } => {
                 if hit.front_face {
@@ -236,12 +236,12 @@ impl Default for Material {
     }
 }
 
-fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
     let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
     r0 * r0 + (1.0 - r0 * r0) * (1.0 - cosine).powi(5)
 }
 
-fn metal_reflectance(cosine: f64, color: Vector3<f64>) -> Vector3<f64> {
+fn metal_reflectance(cosine: f32, color: Vector3<f32>) -> Vector3<f32> {
     let ones = Vector3::new(1.0, 1.0, 1.0);
     color + (ones - color) * (1.0 - cosine).powi(5)
 }
@@ -249,10 +249,10 @@ fn metal_reflectance(cosine: f64, color: Vector3<f64>) -> Vector3<f64> {
 pub enum ScatterRecord<'a> {
     Specular {
         specular_ray: Ray,
-        attenuation: Vector3<f64>,
+        attenuation: Vector3<f32>,
     },
     Scatter {
         pdf: PDFType<'a>,
-        attenuation: Vector3<f64>,
+        attenuation: Vector3<f32>,
     },
 }

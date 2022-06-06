@@ -14,17 +14,16 @@ use rand::{prelude::ThreadRng, Rng};
 
 pub struct World {
     pub camera: Camera,
-    pub background: Vector3<f64>,
+    pub background: Vector3<f32>,
     pub bvh_tree: Object,
     pub aa: i32,
     pub depth: i32,
-    width: f64,
-    height: f64,
+    width: f32,
+    height: f32,
 }
 impl World {
-    pub fn new(scene: Scenes, width: f64, height: f64, aa: i32, depth: i32) -> Self {
+    pub fn new(scene: Scenes, width: f32, height: f32, aa: i32, depth: i32) -> Self {
         let (mut objects, camera, background) = scene.get(width, height);
-
         let bvh_tree = BVHNode::from(&mut objects);
 
         Self {
@@ -52,17 +51,21 @@ impl World {
             1.0,
             Material::default(),
             true,
+        ),Object::build_sphere(
+            Vector3::new(-0.05, 0.07, -1.0+0.07),
+            0.07,
+            Material::default(),
         )];
         frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
             let mut rng = rand::thread_rng();
 
             let mut pixel_color = Vector3::new(0.0, 0.0, 0.0);
             for _ in 0..self.aa {
-                let x = (i % self.width as usize) as f64;
-                let y = (i / self.width as usize) as f64;
+                let x = (i % self.width as usize) as f32;
+                let y = (i / self.width as usize) as f32;
 
-                let u = (x + rng.gen::<f64>()) / (self.width - 1.0);
-                let v = 1.0 - (y + rng.gen::<f64>()) / (self.height - 1.0);
+                let u = (x + rng.gen::<f32>()) / (self.width - 1.0);
+                let v = 1.0 - (y + rng.gen::<f32>()) / (self.height - 1.0);
 
                 let r = self.camera.get_ray(u, v, &mut rng);
                 pixel_color += ray_color(
@@ -74,7 +77,7 @@ impl World {
                     &mut rng,
                 );
             }
-            pixel.copy_from_slice(&get_color(&mut pixel_color, self.aa as f64));
+            pixel.copy_from_slice(&get_color(&mut pixel_color, self.aa as f32));
             pb.inc(1);
         });
         pb.finish_and_clear();
@@ -86,15 +89,15 @@ fn ray_color(
     world: &Object,
     r: Ray,
     depth_t: i32,
-    background: Vector3<f64>,
+    background: Vector3<f32>,
     light: &[Object],
     rng: &mut ThreadRng,
-) -> Vector3<f64> {
+) -> Vector3<f32> {
     let mut color = Vector3::new(1.0, 1.0, 1.0);
 
     let mut scatter_ray = r;
     for _depth in 0..depth_t {
-        if let Some(hit) = world.hit(&scatter_ray, 0.001, f64::INFINITY) {
+        if let Some(hit) = world.hit(&scatter_ray, 0.001, f32::INFINITY) {
             if let Some(scatter) = hit.material.scatter(&scatter_ray, &hit, rng) {
                 match scatter {
                     ScatterRecord::Specular {
@@ -133,7 +136,7 @@ fn ray_color(
     Vector3::new(0.0, 0.0, 0.0)
 }
 
-fn get_color(color: &mut Vector3<f64>, samples_per_pixel: f64) -> [u8; 4] {
+fn get_color(color: &mut Vector3<f32>, samples_per_pixel: f32) -> [u8; 4] {
     let mut r = color.x / samples_per_pixel;
     let mut g = color.y / samples_per_pixel;
     let mut b = color.z / samples_per_pixel;

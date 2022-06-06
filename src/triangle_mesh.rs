@@ -9,21 +9,21 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Triangle {
-    p0: Vector3<f64>,
-    normal0: Vector3<f64>,
-    normal1: Vector3<f64>,
-    normal2: Vector3<f64>,
-    a: f64,
-    b: f64,
-    c: f64,
-    d: f64,
-    e: f64,
-    f: f64,
+    p0: Vector3<f32>,
+    normal0: Vector3<f32>,
+    normal1: Vector3<f32>,
+    normal2: Vector3<f32>,
+    a: f32,
+    b: f32,
+    c: f32,
+    d: f32,
+    e: f32,
+    f: f32,
     bounding_box: AABB,
     material: Material,
 }
 impl Triangle {
-    pub fn new(p0: Vector3<f64>, p1: Vector3<f64>, p2: Vector3<f64>, material: Material) -> Self {
+    pub fn new(p0: Vector3<f32>, p1: Vector3<f32>, p2: Vector3<f32>, material: Material) -> Self {
         let minimum = (p0.min(p1)).min(p2);
         let maximum = (p0.max(p1)).max(p2);
         let bounding_box = AABB::new(minimum, maximum);
@@ -45,9 +45,9 @@ impl Triangle {
 
     pub fn set_normals(
         &mut self,
-        normal0: Vector3<f64>,
-        normal1: Vector3<f64>,
-        normal2: Vector3<f64>,
+        normal0: Vector3<f32>,
+        normal1: Vector3<f32>,
+        normal2: Vector3<f32>,
     ) {
         self.normal0 = normal0;
         self.normal1 = normal1;
@@ -57,7 +57,7 @@ impl Triangle {
 
 impl Hittable for Triangle {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<crate::ray::HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<crate::ray::HitRecord> {
         let g = r.direction.x;
         let h = r.direction.y;
         let i = r.direction.z;
@@ -114,7 +114,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn load(filename: &str, scale: f64, offset: Vector3<f64>, material: Material) -> Self {
+    pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material) -> Self {
         let object = tobj::load_obj(
             filename,
             &tobj::LoadOptions {
@@ -132,13 +132,6 @@ impl Mesh {
             let mesh = &m.mesh;
 
             println!("model[{}].name = \'{}\'", i, m.name);
-            println!("model[{}].mesh.material_id = {:?}", i, mesh.material_id);
-
-            println!(
-                "Size of model[{}].face_arities: {}",
-                i,
-                mesh.face_arities.len()
-            );
 
             // Normals and texture coordinates are also loaded, but not printed in this example
             println!("model[{}].vertices: {}", i, mesh.positions.len() / 3);
@@ -149,7 +142,7 @@ impl Mesh {
                 let ind1 = mesh.indices[3 * i + 1] as usize;
                 let ind2 = mesh.indices[3 * i + 2] as usize;
 
-                let p0: Vector3<f64> = Vector3::new(
+                let p0: Vector3<f32> = Vector3::new(
                     mesh.positions[3 * ind0].into(),
                     mesh.positions[3 * ind0 + 1].into(),
                     mesh.positions[3 * ind0 + 2].into(),
@@ -198,7 +191,7 @@ impl Mesh {
 
 impl Hittable for Mesh {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         self.triangles.hit(r, t_min, t_max)
     }
 

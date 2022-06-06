@@ -3,27 +3,27 @@ use rand::prelude::ThreadRng;
 use crate::{ray::Ray, utilities::vector3::Vector3};
 
 pub struct Camera {
-    pub origin: Vector3<f64>,
-    pub viewport_height: f64,
-    pub viewport_width: f64,
-    pub lens_radius: f64,
-    pub u: Vector3<f64>,
-    pub v: Vector3<f64>,
-    pub w: Vector3<f64>,
-    pub horizontal: Vector3<f64>,
-    pub vertical: Vector3<f64>,
-    pub lower_left_corner: Vector3<f64>,
+    pub origin: Vector3<f32>,
+    pub viewport_height: f32,
+    pub viewport_width: f32,
+    pub lens_radius: f32,
+    pub u: Vector3<f32>,
+    pub v: Vector3<f32>,
+    pub w: Vector3<f32>,
+    pub horizontal: Vector3<f32>,
+    pub vertical: Vector3<f32>,
+    pub lower_left_corner: Vector3<f32>,
 }
 
 impl Camera {
     pub fn new(
-        lookfrom: Vector3<f64>,
-        lookat: Vector3<f64>,
-        vup: Vector3<f64>,
-        vfov: f64,
-        aspect_ratio: f64,
-        aperture: f64,
-        focus_dist: f64,
+        lookfrom: Vector3<f32>,
+        lookat: Vector3<f32>,
+        vup: Vector3<f32>,
+        vfov: f32,
+        aspect_ratio: f32,
+        aperture: f32,
+        focus_dist: f32,
     ) -> Self {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
@@ -52,7 +52,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64, rng: &mut ThreadRng) -> Ray {
+    pub fn get_ray(&self, s: f32, t: f32, rng: &mut ThreadRng) -> Ray {
         let rd = Vector3::random_in_unit_disk(rng) * self.lens_radius;
         let offset = self.u * rd.x + self.v * rd.y;
         Ray::new(

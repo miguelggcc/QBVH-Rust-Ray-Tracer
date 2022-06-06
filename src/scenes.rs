@@ -20,7 +20,7 @@ pub enum Scenes {
 }
 
 impl Scenes {
-    pub fn get(&self, width: f64, height: f64) -> (Vec<Object>, Camera, Vector3<f64>) {
+    pub fn get(&self, width: f32, height: f32) -> (Vec<Object>, Camera, Vector3<f32>) {
         let mut rng = rand::thread_rng();
         match self {
             Self::Basic => {
@@ -50,13 +50,13 @@ impl Scenes {
 
                 for a in -11..11 {
                     for b in -11..11 {
-                        let x = a as f64;
-                        let y = b as f64;
+                        let x = a as f32;
+                        let y = b as f32;
                         let choose_material = rng.gen_range(1..100);
                         let center = Vector3::new(
-                            x + 0.9 * rng.gen::<f64>(),
+                            x + 0.9 * rng.gen::<f32>(),
                             0.2,
-                            y + 0.9 * rng.gen::<f64>(),
+                            y + 0.9 * rng.gen::<f32>(),
                         );
 
                         if choose_material < 80 {
@@ -141,13 +141,13 @@ impl Scenes {
 
                 for a in -11..11 {
                     for b in -11..11 {
-                        let x = a as f64;
-                        let y = b as f64;
+                        let x = a as f32;
+                        let y = b as f32;
                         let choose_material = rng.gen_range(1..100);
                         let center = Vector3::new(
-                            x + 0.9 * rng.gen::<f64>(),
+                            x + 0.9 * rng.gen::<f32>(),
                             0.2,
-                            y + 0.9 * rng.gen::<f64>(),
+                            y + 0.9 * rng.gen::<f32>(),
                         );
 
                         if choose_material < 80 {
@@ -238,8 +238,8 @@ impl Scenes {
                 let hdri = Material::Hdri {
                     texture: Texture::Hdri {
                         image_v: Arc::new(image_v),
-                        width: im_width as f64,
-                        height: im_height as f64,
+                        width: im_width as f32,
+                        height: im_height as f32,
                     },
                 };
                 let cr = Material::Dielectric {
@@ -257,8 +257,8 @@ impl Scenes {
                 let material_ground = Material::TexturedLambertian {
                     texture: Texture::Image {
                         image_v: Arc::new(image_v.to_vec()),
-                        width: image.width() as f64,
-                        height: image.height() as f64,
+                        width: image.width() as f32,
+                        height: image.height() as f32,
                     },
                 };
 
@@ -310,8 +310,8 @@ impl Scenes {
                 let hdri = Material::Hdri {
                     texture: Texture::Hdri {
                         image_v: Arc::new(image_v),
-                        width: im_width as f64,
-                        height: im_height as f64,
+                        width: im_width as f32,
+                        height: im_height as f32,
                     },
                 };
                 let cr = Material::Dielectric {
@@ -329,8 +329,8 @@ impl Scenes {
                 let material_ground = Material::TexturedLambertian {
                     texture: Texture::Image {
                         image_v: Arc::new(image_v.to_vec()),
-                        width: image.width() as f64,
-                        height: image.height() as f64,
+                        width: image.width() as f32,
+                        height: image.height() as f32,
                     },
                 };
 
@@ -369,8 +369,8 @@ impl Scenes {
                 let marble_material = Material::TexturedLambertian {
                     texture: Texture::Image {
                         image_v: Arc::new(image_v.to_vec()),
-                        width: image.width() as f64,
-                        height: image.height() as f64,
+                        width: image.width() as f32,
+                        height: image.height() as f32,
                     },
                 };
 
@@ -564,8 +564,8 @@ impl Scenes {
                 for i in 0..boxes_per_side {
                     for j in 0..boxes_per_side {
                         let w = 100.0;
-                        let x0 = -1000.0 + i as f64 * w;
-                        let z0 = -1000.0 + j as f64 * w;
+                        let x0 = -1000.0 + i as f32 * w;
+                        let z0 = -1000.0 + j as f32 * w;
                         let y0 = 0.0;
                         let x1 = x0 + w;
                         let y1 = rng.gen_range(1.0..101.0);
@@ -642,8 +642,8 @@ impl Scenes {
                 let emat = Material::TexturedLambertian {
                     texture: Texture::Image {
                         image_v: Arc::new(image_v.to_vec()),
-                        width: image.width() as f64,
-                        height: image.height() as f64,
+                        width: image.width() as f32,
+                        height: image.height() as f32,
                     },
                 };
                 objects.push(Object::build_sphere(
@@ -749,14 +749,14 @@ impl Scenes {
 
                 for i in 0..7 {
                     let sphere = Object::build_sphere(
-                        Vector3::new(68.0 + i as f64 * 104.0, 55.0, 0.0 + i as f64 * 72.0),
+                        Vector3::new(68.0 + i as f32 * 104.0, 55.0, 0.0 + i as f32 * 72.0),
                         55.0,
                         Material::Blend {
                             material1: Box::new(Material::Lambertian {
                                 albedo: Vector3::new(0.12, 0.15, 0.45),
                             }),
                             material2: Box::new(aluminum.clone()),
-                            ratio: 1.0 - i as f64 * 1.0 / 6.0,
+                            ratio: 1.0 - i as f32 * 1.0 / 6.0,
                         },
                     );
                     objects.push(sphere);
@@ -792,9 +792,9 @@ impl Scenes {
                 };
 
                 let skull = Object::build_mesh(
-                    "objs/Upper_skull.obj",
-                    0.1,
-                    Vector3::new(0.0, 0.0, 0.0),
+                    "objs/skull.obj",
+                    0.04,
+                    Vector3::new(0.0, -0.10, 0.0),
                     Material::Dielectric {
                         index_of_refraction: 1.5,
                     },
@@ -812,7 +812,7 @@ impl Scenes {
                 ));
                 objects.push(Object::build_mesh(
                     "objs/dragon.obj",
-                    0.01,
+                    0.013,
                     Vector3::new(0.1, 0.0, 0.0),
                     gold,
                 ));
@@ -829,6 +829,16 @@ impl Scenes {
                         albedo: Vector3::new(0.1, 0.15, 0.25),
                     },
                     true,
+                ));
+                let diffsphere = Material::DiffuseLight {
+                    texture: Texture::SolidColor {
+                        albedo: Vector3::new(0.2, 0.8, 0.6) * 1.5,
+                    },
+                };
+                objects.push(Object::build_sphere(
+                    Vector3::new(-0.05, 0.07, -1.0+0.07),
+                    0.07,
+                    diffsphere,
                 ));
                 (objects, camera, Vector3::new(0.0, 0.0, 0.0))
             }

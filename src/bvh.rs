@@ -30,10 +30,10 @@ impl BVHNode {
             objects[0].clone()
         } else {
             // From @cbiffle
-            fn axis_range(objects: &mut [Object], axis: u8) -> f64 {
+            fn axis_range(objects: &mut [Object], axis: u8) -> f32 {
                 let range = objects
                     .iter()
-                    .fold(std::f64::MAX..std::f64::MIN, |range, object| {
+                    .fold(std::f32::MAX..std::f32::MIN, |range, object| {
                         let bb = object.bounding_box();
                         let min = bb.minimum.get_axis(axis).min(bb.maximum.get_axis(axis));
                         let max = bb.minimum.get_axis(axis).max(bb.maximum.get_axis(axis));
@@ -73,7 +73,7 @@ impl BVHNode {
 }
 impl Hittable for BVHNode {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         }

@@ -9,27 +9,27 @@ use crate::utilities::vector3::Vector3;
 #[derive(Clone, PartialEq)]
 pub enum Texture {
     SolidColor {
-        albedo: Vector3<f64>,
+        albedo: Vector3<f32>,
     },
     Checker {
-        color1: Vector3<f64>,
-        color2: Vector3<f64>,
+        color1: Vector3<f32>,
+        color2: Vector3<f32>,
     },
     Image {
         image_v: Arc<Vec<u8>>,
-        width: f64,
-        height: f64,
+        width: f32,
+        height: f32,
     },
     Hdri {
         image_v: Arc<Vec<Rgb<f32>>>,
-        width: f64,
-        height: f64,
+        width: f32,
+        height: f32,
     },
 }
 
 impl Texture {
     #[inline(always)]
-    pub fn value(&self, u: f64, v: f64, p: Vector3<f64>) -> Vector3<f64> {
+    pub fn value(&self, u: f32, v: f32, p: Vector3<f32>) -> Vector3<f32> {
         match self {
             Self::SolidColor { albedo } => *albedo,
             Self::Checker { color1, color2 } => {
@@ -64,9 +64,9 @@ impl Texture {
 
                 let pixel = &image_v[(i + j * w as usize) * 3..(i + j * w as usize) * 3 + 3];
                 Vector3::new(
-                    pixel[0] as f64 / 255.0,
-                    pixel[1] as f64 / 255.0,
-                    pixel[2] as f64 / 255.0,
+                    pixel[0] as f32 / 255.0,
+                    pixel[1] as f32 / 255.0,
+                    pixel[2] as f32 / 255.0,
                 )
             }
             Self::Hdri {
@@ -93,7 +93,7 @@ impl Texture {
                 }
 
                 let pixel = image_v[(i + j * w)];
-                Vector3::new(pixel[0] as f64, pixel[1] as f64, pixel[2] as f64)
+                Vector3::new(pixel[0] as f32, pixel[1] as f32, pixel[2] as f32)
             }
         }
     }

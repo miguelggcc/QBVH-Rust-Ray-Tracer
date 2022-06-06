@@ -1,12 +1,12 @@
 use crate::Vector3;
 #[allow(clippy::upper_case_acronyms)]
 pub struct ONB {
-    pub u: Vector3<f64>,
-    pub v: Vector3<f64>,
-    pub w: Vector3<f64>,
+    pub u: Vector3<f32>,
+    pub v: Vector3<f32>,
+    pub w: Vector3<f32>,
 }
 impl ONB {
-    pub fn build_from(n: Vector3<f64>) -> Self {
+    pub fn build_from(n: Vector3<f32>) -> Self {
         let w = n.norm();
         let a = if w.x.abs() > 0.9 {
             Vector3::new(0.0, 1.0, 0.0)
@@ -18,7 +18,7 @@ impl ONB {
         let u = Vector3::cross(w, v);
         Self { u, v, w }
     }
-    pub fn local(&self, a: Vector3<f64>) -> Vector3<f64> {
+    pub fn local(&self, a: Vector3<f32>) -> Vector3<f32> {
         self.u * a.x + self.v * a.y + self.w * a.z
     }
 }

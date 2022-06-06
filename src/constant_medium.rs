@@ -7,12 +7,12 @@ use rand::Rng;
 #[derive(Clone)]
 pub struct ConstantMedium {
     boundary: Box<Object>,
-    neg_inv_density: f64,
+    neg_inv_density: f32,
     phase_function: Material,
 }
 
 impl ConstantMedium {
-    pub fn new(boundary: Object, d: f64, color: Vector3<f64>) -> Self {
+    pub fn new(boundary: Object, d: f32, color: Vector3<f32>) -> Self {
         let phase_function = Material::Isotropic { color };
         Self {
             boundary: Box::new(boundary),
@@ -23,10 +23,10 @@ impl ConstantMedium {
 }
 
 impl Hittable for ConstantMedium {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<crate::ray::HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<crate::ray::HitRecord> {
         let mut rng = rand::thread_rng();
-        if let Some(mut hit1) = self.boundary.hit(r, f64::MIN, f64::MAX) {
-            if let Some(mut hit2) = self.boundary.hit(r, hit1.t + 0.0001, f64::MAX) {
+        if let Some(mut hit1) = self.boundary.hit(r, f32::MIN, f32::MAX) {
+            if let Some(mut hit2) = self.boundary.hit(r, hit1.t + 0.0001, f32::MAX) {
                 if hit1.t < t_min {
                     hit1.t = t_min;
                 }
@@ -44,7 +44,7 @@ impl Hittable for ConstantMedium {
 
                 let ray_length = r.direction.magnitude();
                 let distance_inside_boundary = (hit2.t - hit1.t) * ray_length;
-                let hit_distance = self.neg_inv_density * rng.gen::<f64>().ln();
+                let hit_distance = self.neg_inv_density * rng.gen::<f32>().ln();
 
                 if hit_distance > distance_inside_boundary {
                     return None;

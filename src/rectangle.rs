@@ -12,46 +12,46 @@ use crate::{
 
 #[derive(Clone)]
 pub struct XYRect {
-    pub x0: f64,
-    pub x1: f64,
-    pub y0: f64,
-    pub y1: f64,
-    pub k: f64,
+    pub x0: f32,
+    pub x1: f32,
+    pub y0: f32,
+    pub y1: f32,
+    pub k: f32,
     pub material: Material,
-    pub normal: Vector3<f64>,
+    pub normal: Vector3<f32>,
     bounding_box: AABB,
 }
 #[derive(Clone)]
 pub struct XZRect {
-    pub x0: f64,
-    pub x1: f64,
-    pub z0: f64,
-    pub z1: f64,
-    pub k: f64,
+    pub x0: f32,
+    pub x1: f32,
+    pub z0: f32,
+    pub z1: f32,
+    pub k: f32,
     pub material: Material,
-    pub normal: Vector3<f64>,
+    pub normal: Vector3<f32>,
     bounding_box: AABB,
 }
 
 #[derive(Clone)]
 pub struct YZRect {
-    pub y0: f64,
-    pub y1: f64,
-    pub z0: f64,
-    pub z1: f64,
-    pub k: f64,
+    pub y0: f32,
+    pub y1: f32,
+    pub z0: f32,
+    pub z1: f32,
+    pub k: f32,
     pub material: Material,
-    pub normal: Vector3<f64>,
+    pub normal: Vector3<f32>,
     bounding_box: AABB,
 }
 
 impl XYRect {
     pub fn new(
-        x0: f64,
-        x1: f64,
-        y0: f64,
-        y1: f64,
-        k: f64,
+        x0: f32,
+        x1: f32,
+        y0: f32,
+        y1: f32,
+        k: f32,
         material: Material,
         flip_normal: bool,
     ) -> Self {
@@ -78,8 +78,8 @@ impl XYRect {
         }
     }
 
-    pub fn pdf_value(&self, origin: Vector3<f64>, v: Vector3<f64>) -> f64 {
-        if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f64::MAX) {
+    pub fn pdf_value(&self, origin: Vector3<f32>, v: Vector3<f32>) -> f32 {
+        if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f32::MAX) {
             let area = (self.x1 - self.x0) * (self.y1 - self.y0);
             let distance_2 = hit.t * hit.t * v.magnitude2();
             let cosine = Vector3::dot(v, hit.normal).abs() / v.magnitude();
@@ -88,7 +88,7 @@ impl XYRect {
         0.0
     }
 
-    pub fn random(&self, origin: Vector3<f64>, rng: &mut ThreadRng) -> Vector3<f64> {
+    pub fn random(&self, origin: Vector3<f32>, rng: &mut ThreadRng) -> Vector3<f32> {
         Vector3::new(
             rng.gen_range(self.x0..self.x1),
             rng.gen_range(self.y0..self.y1),
@@ -99,7 +99,7 @@ impl XYRect {
 
 impl Hittable for XYRect {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t = (self.k - r.origin.z) / r.direction.z;
         if t < t_min || t > t_max {
             return None;
@@ -131,11 +131,11 @@ impl Hittable for XYRect {
 
 impl XZRect {
     pub fn new(
-        x0: f64,
-        x1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
+        x0: f32,
+        x1: f32,
+        z0: f32,
+        z1: f32,
+        k: f32,
         material: Material,
         flip_normal: bool,
     ) -> Self {
@@ -160,8 +160,8 @@ impl XZRect {
         }
     }
 
-    pub fn pdf_value(&self, origin: Vector3<f64>, v: Vector3<f64>) -> f64 {
-        if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f64::MAX) {
+    pub fn pdf_value(&self, origin: Vector3<f32>, v: Vector3<f32>) -> f32 {
+        if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f32::MAX) {
             let area = (self.x1 - self.x0) * (self.z1 - self.z0);
             let distance_2 = hit.t * hit.t * v.magnitude2();
             let cosine = Vector3::dot(v, hit.normal).abs() / v.magnitude();
@@ -171,7 +171,7 @@ impl XZRect {
         0.0
     }
 
-    pub fn random(&self, origin: Vector3<f64>, rng: &mut ThreadRng) -> Vector3<f64> {
+    pub fn random(&self, origin: Vector3<f32>, rng: &mut ThreadRng) -> Vector3<f32> {
         Vector3::new(
             rng.gen_range(self.x0..self.x1),
             self.k,
@@ -181,7 +181,7 @@ impl XZRect {
 }
 impl Hittable for XZRect {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t = (self.k - r.origin.y) / r.direction.y;
         if t < t_min || t > t_max {
             return None;
@@ -213,11 +213,11 @@ impl Hittable for XZRect {
 
 impl YZRect {
     pub fn new(
-        y0: f64,
-        y1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
+        y0: f32,
+        y1: f32,
+        z0: f32,
+        z1: f32,
+        k: f32,
         material: Material,
         flip_normal: bool,
     ) -> Self {
@@ -244,7 +244,7 @@ impl YZRect {
 }
 impl Hittable for YZRect {
     #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t = (self.k - r.origin.x) / r.direction.x;
         if t < t_min || t > t_max {
             return None;
@@ -280,7 +280,7 @@ pub struct Prism {
     bounding_box: AABB,
 }
 impl Prism {
-    pub fn new(p0: Vector3<f64>, p1: Vector3<f64>, material: Material) -> Self {
+    pub fn new(p0: Vector3<f32>, p1: Vector3<f32>, material: Material) -> Self {
         let mut faces = [
             Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone(), false),
             Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone(), true),
@@ -298,7 +298,7 @@ impl Prism {
 }
 
 impl Hittable for Prism {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         self.faces.hit(r, t_min, t_max)
     }
 
