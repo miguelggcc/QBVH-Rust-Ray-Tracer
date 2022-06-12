@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::Path, sync::Arc};
 
 use crate::{
     bvh::BVHNode, camera::Camera, material::Material, object::Object, texture::Texture,
-    utilities::vector3::Vector3, triangle_mesh::load,
+    triangle_mesh::load, utilities::vector3::Vector3,
 };
 use image::codecs::hdr::HdrDecoder;
 use rand::Rng;
@@ -578,7 +578,7 @@ impl Scenes {
                         ));*/
                     }
                 }
-                let mut objects = vec![];//BVHNode::from(&mut boxes, &mut 0)];
+                let mut objects = vec![]; //BVHNode::from(&mut boxes, &mut 0)];
 
                 let light = Material::DiffuseLight {
                     texture: Texture::SolidColor {
@@ -790,17 +790,17 @@ impl Scenes {
                     albedo: Vector3::new(1.0, 0.86, 0.57),
                     fuzz: 0.5,
                 };
-let mut objects = vec![];
+                let mut objects = vec![];
                 objects.append(&mut load(
                     "objs/skull.obj",
                     0.04,
                     Vector3::new(-0.1, 0.0, 0.0),
                     Material::Dielectric {
                         index_of_refraction: 1.5,
-                    }
+                    },
                 ));
                 /*let mut objects =
-                    vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];*/
+                vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];*/
                 objects.push(Object::build_xz_rect(
                     -2.0,
                     2.0,
@@ -838,8 +838,9 @@ let mut objects = vec![];
                 objects.push(Object::build_sphere(
                     Vector3::new(-0.05, 0.07, -1.0 + 0.07),
                     0.07,
-                    diffsphere,
+                    diffsphere.clone(),
                 ));
+                
                 (objects, camera, Vector3::new(0.0, 0.0, 0.0))
             }
         }

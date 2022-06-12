@@ -107,74 +107,74 @@ impl Hittable for Triangle {
     }
 }
 
-    pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material)->Vec<Object> {
-        let mut triangles = vec![];
-        let file = tobj::load_obj(
-            filename,
-            &tobj::LoadOptions {
-                single_index: false,
-                triangulate: true,
-                ignore_points: false,
-                ignore_lines: false,
-            },
-        );
-        assert!(file.is_ok());
+pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material) -> Vec<Object> {
+    let mut triangles = vec![];
+    let file = tobj::load_obj(
+        filename,
+        &tobj::LoadOptions {
+            single_index: false,
+            triangulate: true,
+            ignore_points: false,
+            ignore_lines: false,
+        },
+    );
+    assert!(file.is_ok());
 
-        let (models, _) = file.expect("Failed to load OBJ file");
-        for (i, m) in models.iter().enumerate() {
-            let mesh = &m.mesh;
+    let (models, _) = file.expect("Failed to load OBJ file");
+    for (i, m) in models.iter().enumerate() {
+        let mesh = &m.mesh;
 
-            println!("model[{}].name = \'{}\'", i, m.name);
+        println!("model[{}].name = \'{}\'", i, m.name);
 
-            // Normals and texture coordinates are also loaded, but not printed in this example
-            println!("model[{}].vertices: {}", i, mesh.positions.len() / 3);
-            let mut v_normal = vec![Vector3::new(0.0, 0.0, 0.0); mesh.indices.len() / 3];
-            assert!(mesh.positions.len() % 3 == 0);
-            for i in 0..mesh.indices.len() / 3 {
-                let ind0 = mesh.indices[3 * i] as usize;
-                let ind1 = mesh.indices[3 * i + 1] as usize;
-                let ind2 = mesh.indices[3 * i + 2] as usize;
+        // Normals and texture coordinates are also loaded, but not printed in this example
+        println!("model[{}].vertices: {}", i, mesh.positions.len() / 3);
+        let mut v_normal = vec![Vector3::new(0.0, 0.0, 0.0); mesh.indices.len() / 3];
+        assert!(mesh.positions.len() % 3 == 0);
+        for i in 0..mesh.indices.len() / 3 {
+            let ind0 = mesh.indices[3 * i] as usize;
+            let ind1 = mesh.indices[3 * i + 1] as usize;
+            let ind2 = mesh.indices[3 * i + 2] as usize;
 
-                let p0: Vector3<f32> = Vector3::new(
-                    mesh.positions[3 * ind0].into(),
-                    mesh.positions[3 * ind0 + 1].into(),
-                    mesh.positions[3 * ind0 + 2].into(),
-                );
-                let p1 = Vector3::new(
-                    mesh.positions[3 * ind1].into(),
-                    mesh.positions[3 * ind1 + 1].into(),
-                    mesh.positions[3 * ind1 + 2].into(),
-                );
-                let p2 = Vector3::new(
-                    mesh.positions[3 * ind2].into(),
-                    mesh.positions[3 * ind2 + 1].into(),
-                    mesh.positions[3 * ind2 + 2].into(),
-                );
+            let p0: Vector3<f32> = Vector3::new(
+                mesh.positions[3 * ind0].into(),
+                mesh.positions[3 * ind0 + 1].into(),
+                mesh.positions[3 * ind0 + 2].into(),
+            );
+            let p1 = Vector3::new(
+                mesh.positions[3 * ind1].into(),
+                mesh.positions[3 * ind1 + 1].into(),
+                mesh.positions[3 * ind1 + 2].into(),
+            );
+            let p2 = Vector3::new(
+                mesh.positions[3 * ind2].into(),
+                mesh.positions[3 * ind2 + 1].into(),
+                mesh.positions[3 * ind2 + 2].into(),
+            );
 
-                let a = p1 - p0;
-                let b = p2 - p0;
-                let normal = Vector3::cross(a, b).norm();
-                v_normal[ind0] += normal;
-                v_normal[ind1] += normal;
-                v_normal[ind2] += normal;
+            let a = p1 - p0;
+            let b = p2 - p0;
+            let normal = Vector3::cross(a, b).norm();
+            v_normal[ind0] += normal;
+            v_normal[ind1] += normal;
+            v_normal[ind2] += normal;
 
-                triangles.push(Object::get_triangles_vertices(
-                    p0 * scale + offset,
-                    p1 * scale + offset,
-                    p2 * scale + offset,
-                    material.clone(),
-                ));
-            }
-            for i in 0..mesh.indices.len() / 3 {
-                let ind0 = mesh.indices[3 * i] as usize;
-                let ind1 = mesh.indices[3 * i + 1] as usize;
-                let ind2 = mesh.indices[3 * i + 2] as usize;
-                triangles[i].set_normals(
-                    v_normal[ind0].norm(),
-                    v_normal[ind1].norm(),
-                    v_normal[ind2].norm(),
-                )
-            }
+            triangles.push(Object::get_triangles_vertices(
+                p0 * scale + offset,
+                p1 * scale + offset,
+                p2 * scale + offset,
+                material.clone(),
+            ));
         }
-        triangles
+        for i in 0..mesh.indices.len() / 3 {
+            let ind0 = mesh.indices[3 * i] as usize;
+            let ind1 = mesh.indices[3 * i + 1] as usize;
+            let ind2 = mesh.indices[3 * i + 2] as usize;
+            triangles[i].set_normals(
+                v_normal[ind0].norm(),
+                v_normal[ind1].norm(),
+                v_normal[ind2].norm(),
+            )
+        }
+    }
+    triangles
 }

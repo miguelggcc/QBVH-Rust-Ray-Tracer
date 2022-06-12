@@ -1,11 +1,11 @@
 use crate::bvh::BVH;
 use crate::camera::Camera;
+use crate::material::Material;
 use crate::material::ScatterRecord;
-use crate::object::{Object};
+use crate::object::Object;
 use crate::pdf::{PDFMixture, PDFType, PDF};
 use crate::scenes::Scenes;
 use crate::utilities::vector3::Vector3;
-use crate::{material::Material};
 use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
@@ -23,7 +23,7 @@ pub struct World {
     width: f32,
     height: f32,
 }
-impl World{
+impl World {
     pub fn new(scene: Scenes, width: f32, height: f32, aa: i32, depth: i32) -> Self {
         let (mut objects, camera, background) = scene.get(width, height);
         let bvh_tree = BVH::build(&mut objects);
@@ -73,7 +73,7 @@ impl World{
                     self.background,
                     &light,
                     &self.objects,
-                    &mut rng,            
+                    &mut rng,
                 );
             }
             pixel.copy_from_slice(&get_color(&mut pixel_color, self.aa as f32));

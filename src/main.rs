@@ -28,7 +28,6 @@ use show_image::{event, ImageInfo, ImageView, WindowOptions};
 
 use crate::{integrator::World, scenes::Scenes};
 
-#[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let commands = command!()
         .args(&[
@@ -79,7 +78,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start.elapsed();
     println!("Time elapsed: {:?}", duration);
 
-    let image = ImageView::new(ImageInfo::rgba8(WIDTH, HEIGHT), &pixel_data);
+    image::save_buffer("image.png", &pixel_data, WIDTH, HEIGHT, image::ColorType::Rgba8).unwrap();
+
+
+   /*  let image = ImageView::new(ImageInfo::rgba8(WIDTH, HEIGHT), &pixel_data);
 
     // Create a window with default options and display the image.
     let window = show_image::create_window(
@@ -98,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 break;
             }
         }
-    }
+    }*/
 
     Ok(())
 }

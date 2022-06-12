@@ -9,7 +9,7 @@ use crate::{
     rectangle::{XYRect, XZRect, YZRect},
     sphere::Sphere,
     transformations::{RotateY, Translate},
-    triangle_mesh::{Triangle},
+    triangle_mesh::Triangle,
     utilities::vector3::Vector3,
 };
 //#[enum_dispatch(Hittable)] //removed enum_dispatch crate for easier profiling

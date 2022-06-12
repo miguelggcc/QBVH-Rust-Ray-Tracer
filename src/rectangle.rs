@@ -273,14 +273,58 @@ impl Hittable for YZRect {
     }
 }
 
-
-    pub fn push_prism(p0: Vector3<f32>, p1: Vector3<f32>, objects: &mut Vec<Object>, material: Material) {
-       objects.push(
-            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone(), false));
-            objects.push( Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone(), true));
-            objects.push( Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone(), false));
-            objects.push( Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone(), true));
-            objects.push(Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone(), false));
-            objects.push(Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material, true));
-    }
-
+pub fn push_prism(
+    p0: Vector3<f32>,
+    p1: Vector3<f32>,
+    objects: &mut Vec<Object>,
+    material: Material,
+) {
+    objects.push(Object::build_xy_rect(
+        p0.x,
+        p1.x,
+        p0.y,
+        p1.y,
+        p1.z,
+        material.clone(),
+        false,
+    ));
+    objects.push(Object::build_xy_rect(
+        p0.x,
+        p1.x,
+        p0.y,
+        p1.y,
+        p0.z,
+        material.clone(),
+        true,
+    ));
+    objects.push(Object::build_xz_rect(
+        p0.x,
+        p1.x,
+        p0.z,
+        p1.z,
+        p1.y,
+        material.clone(),
+        false,
+    ));
+    objects.push(Object::build_xz_rect(
+        p0.x,
+        p1.x,
+        p0.z,
+        p1.z,
+        p0.y,
+        material.clone(),
+        true,
+    ));
+    objects.push(Object::build_yz_rect(
+        p0.y,
+        p1.y,
+        p0.z,
+        p1.z,
+        p1.x,
+        material.clone(),
+        false,
+    ));
+    objects.push(Object::build_yz_rect(
+        p0.y, p1.y, p0.z, p1.z, p0.x, material, true,
+    ));
+}
