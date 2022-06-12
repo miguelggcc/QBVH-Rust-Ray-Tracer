@@ -1,17 +1,15 @@
-
 //use enum_dispatch::enum_dispatch;
 use rand::prelude::ThreadRng;
 
 use crate::{
     aabb::AABB,
-    bvh::BVHNode,
     constant_medium::ConstantMedium,
     material::Material,
     ray::{HitRecord, Ray},
-    rectangle::{Prism, XYRect, XZRect, YZRect},
+    rectangle::{XYRect, XZRect, YZRect},
     sphere::Sphere,
     transformations::{RotateY, Translate},
-    triangle_mesh::{Mesh, Triangle},
+    triangle_mesh::{Triangle},
     utilities::vector3::Vector3,
 };
 //#[enum_dispatch(Hittable)] //removed enum_dispatch crate for easier profiling
@@ -21,13 +19,10 @@ pub enum Object {
     XZRect(XZRect),
     XYRect(XYRect),
     YZRect(YZRect),
-    BVHNode(BVHNode),
-    Prism(Prism),
     ConstantMedium(ConstantMedium),
     Translate(Translate),
     RotateY(RotateY),
     Triangle(Triangle),
-    Mesh(Mesh),
 }
 #[allow(dead_code)]
 impl Object {
@@ -71,14 +66,6 @@ impl Object {
         Object::XYRect(XYRect::new(x0, x1, y0, y1, k, material, flip_normal))
     }
 
-    pub fn build_bvhnode(left: Box<Self>, right: Box<Self>, bounding_box: AABB) -> Self {
-        Object::BVHNode(BVHNode::new(left, right, bounding_box))
-    }
-
-    pub fn build_prism(p0: Vector3<f32>, p1: Vector3<f32>, material: Material) -> Self {
-        Object::Prism(Prism::new(p0, p1, material))
-    }
-
     pub fn build_constant_medium(self, d: f32, color: Vector3<f32>) -> Self {
         Object::ConstantMedium(ConstantMedium::new(self, d, color))
     }
@@ -105,15 +92,6 @@ impl Object {
         if let Self::Triangle(triangle) = self {
             triangle.set_normals(normal0, normal1, normal2);
         }
-    }
-
-    pub fn build_mesh(
-        filename: &str,
-        scale: f32,
-        position: Vector3<f32>,
-        material: Material,
-    ) -> Self {
-        Object::Mesh(Mesh::load(filename, scale, position, material))
     }
 
     pub fn pdf_value(&self, o: Vector3<f32>, direction: Vector3<f32>) -> f32 {
@@ -149,13 +127,10 @@ impl Hittable for Object {
             Object::XZRect(rectangle) => rectangle.hit(r, t_min, t_max),
             Object::XYRect(rectangle) => rectangle.hit(r, t_min, t_max),
             Object::YZRect(rectangle) => rectangle.hit(r, t_min, t_max),
-            Object::BVHNode(bvhnode) => bvhnode.hit(r, t_min, t_max),
-            Object::Prism(prism) => prism.hit(r, t_min, t_max),
             Object::ConstantMedium(constant_medium) => constant_medium.hit(r, t_min, t_max),
             Object::Translate(translate) => translate.hit(r, t_min, t_max),
             Object::RotateY(rotate_y) => rotate_y.hit(r, t_min, t_max),
             Object::Triangle(triangle) => triangle.hit(r, t_min, t_max),
-            Object::Mesh(mesh) => mesh.hit(r, t_min, t_max),
         }
     }
 
@@ -165,13 +140,10 @@ impl Hittable for Object {
             Object::XZRect(rectangle) => rectangle.bounding_box(),
             Object::XYRect(rectangle) => rectangle.bounding_box(),
             Object::YZRect(rectangle) => rectangle.bounding_box(),
-            Object::BVHNode(bvhnode) => bvhnode.bounding_box(),
-            Object::Prism(prism) => prism.bounding_box(),
             Object::ConstantMedium(constant_medium) => constant_medium.bounding_box(),
             Object::Translate(translate) => translate.bounding_box(),
             Object::RotateY(rotate_y) => rotate_y.bounding_box(),
             Object::Triangle(triangle) => triangle.bounding_box(),
-            Object::Mesh(mesh) => mesh.bounding_box(),
         }
     }
 }

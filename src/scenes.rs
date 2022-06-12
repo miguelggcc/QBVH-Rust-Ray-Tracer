@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::Path, sync::Arc};
 
 use crate::{
     bvh::BVHNode, camera::Camera, material::Material, object::Object, texture::Texture,
-    utilities::vector3::Vector3,
+    utilities::vector3::Vector3, triangle_mesh::load,
 };
 use image::codecs::hdr::HdrDecoder;
 use rand::Rng;
@@ -510,13 +510,13 @@ impl Scenes {
                     fuzz: 0.0,
                 };*/
 
-                let box1 = Object::build_prism(
+                /*let box1 = Object::build_prism(
                     Vector3::new(0.0, 0.0, 0.0),
                     Vector3::new(165.0, 330.0, 165.0),
                     white,
                 )
                 .rotate_y(15.0)
-                .translate(Vector3::new(265.0, 0.0, 295.0));
+                .translate(Vector3::new(265.0, 0.0, 295.0));*/
 
                 /*let box2 = Object::build_prism(
                     Vector3::new(0.0, 0.0, 0.0),
@@ -533,7 +533,7 @@ impl Scenes {
                         index_of_refraction: 1.5,
                     },
                 );
-                objects.push(box1);
+                //objects.push(box1);
                 objects.push(sphere);
 
                 (objects, camera, Vector3::new(0.0, 0.0, 0.0))
@@ -558,7 +558,7 @@ impl Scenes {
                 let ground = Material::Lambertian {
                     albedo: Vector3::new(0.48, 0.83, 0.53),
                 };
-                let mut boxes = vec![];
+                //let mut boxes = vec![];
                 let boxes_per_side = 20;
 
                 for i in 0..boxes_per_side {
@@ -571,14 +571,14 @@ impl Scenes {
                         let y1 = rng.gen_range(1.0..101.0);
                         let z1 = z0 + w;
 
-                        boxes.push(Object::build_prism(
+                        /*boxes.push(Object::build_prism(
                             Vector3::new(x0, y0, z0),
                             Vector3::new(x1, y1, z1),
                             ground.clone(),
-                        ));
+                        ));*/
                     }
                 }
-                let mut objects = vec![BVHNode::from(&mut boxes)];
+                let mut objects = vec![];//BVHNode::from(&mut boxes, &mut 0)];
 
                 let light = Material::DiffuseLight {
                     texture: Texture::SolidColor {
@@ -665,11 +665,11 @@ impl Scenes {
                         white.clone(),
                     ));
                 }
-                objects.push(
-                    BVHNode::from(&mut box_of_balls)
+                /*objects.push(
+                    BVHNode::from(&mut box_of_balls, &mut 0)
                         .rotate_y(15.0)
                         .translate(Vector3::new(-100.0, 270.0, 395.0)),
-                );
+                );*/
 
                 (objects, camera, Vector3::new(0.0, 0.0, 0.0))
             }
@@ -790,17 +790,17 @@ impl Scenes {
                     albedo: Vector3::new(1.0, 0.86, 0.57),
                     fuzz: 0.5,
                 };
-
-                let skull = Object::build_mesh(
+let mut objects = vec![];
+                objects.append(&mut load(
                     "objs/skull.obj",
                     0.04,
-                    Vector3::new(0.0, -0.10, 0.0),
+                    Vector3::new(-0.1, 0.0, 0.0),
                     Material::Dielectric {
                         index_of_refraction: 1.5,
-                    },
-                );
-                let mut objects =
-                    vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];
+                    }
+                ));
+                /*let mut objects =
+                    vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];*/
                 objects.push(Object::build_xz_rect(
                     -2.0,
                     2.0,
@@ -810,7 +810,7 @@ impl Scenes {
                     Material::default(),
                     true,
                 ));
-                objects.push(Object::build_mesh(
+                objects.append(&mut load(
                     "objs/dragon.obj",
                     0.013,
                     Vector3::new(0.1, 0.0, 0.0),
@@ -836,7 +836,7 @@ impl Scenes {
                     },
                 };
                 objects.push(Object::build_sphere(
-                    Vector3::new(-0.05, 0.07, -1.0+0.07),
+                    Vector3::new(-0.05, 0.07, -1.0 + 0.07),
                     0.07,
                     diffsphere,
                 ));

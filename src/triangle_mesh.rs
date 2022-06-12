@@ -1,4 +1,3 @@
-use crate::bvh::BVHNode;
 use crate::{
     aabb::AABB,
     material::Material,
@@ -107,15 +106,10 @@ impl Hittable for Triangle {
         &self.bounding_box
     }
 }
-#[derive(Clone)]
 
-pub struct Mesh {
-    triangles: Box<Object>,
-}
-
-impl Mesh {
-    pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material) -> Self {
-        let object = tobj::load_obj(
+    pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material)->Vec<Object> {
+        let mut triangles = vec![];
+        let file = tobj::load_obj(
             filename,
             &tobj::LoadOptions {
                 single_index: false,
@@ -124,10 +118,9 @@ impl Mesh {
                 ignore_lines: false,
             },
         );
-        assert!(object.is_ok());
-        let mut triangles = vec![];
+        assert!(file.is_ok());
 
-        let (models, _) = object.expect("Failed to load OBJ file");
+        let (models, _) = file.expect("Failed to load OBJ file");
         for (i, m) in models.iter().enumerate() {
             let mesh = &m.mesh;
 
@@ -183,19 +176,5 @@ impl Mesh {
                 )
             }
         }
-        Self {
-            triangles: Box::new(BVHNode::from(&mut triangles)),
-        }
-    }
-}
-
-impl Hittable for Mesh {
-    #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        self.triangles.hit(r, t_min, t_max)
-    }
-
-    fn bounding_box(&self) -> &crate::aabb::AABB {
-        self.triangles.bounding_box()
-    }
+        triangles
 }

@@ -3,7 +3,6 @@ use rand::Rng;
 
 use crate::{
     aabb::AABB,
-    bvh::BVHNode,
     material::Material,
     object::{Hittable, Object},
     ray::{HitRecord, Ray},
@@ -274,35 +273,14 @@ impl Hittable for YZRect {
     }
 }
 
-#[derive(Clone)]
-pub struct Prism {
-    faces: Box<Object>,
-    bounding_box: AABB,
-}
-impl Prism {
-    pub fn new(p0: Vector3<f32>, p1: Vector3<f32>, material: Material) -> Self {
-        let mut faces = [
-            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone(), false),
-            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone(), true),
-            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone(), false),
-            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone(), true),
-            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone(), false),
-            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material, true),
-        ];
-        let bounding_box = AABB::new(p0, p1);
-        Self {
-            faces: Box::new(BVHNode::from(&mut faces)),
-            bounding_box,
-        }
-    }
-}
 
-impl Hittable for Prism {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        self.faces.hit(r, t_min, t_max)
+    pub fn push_prism(p0: Vector3<f32>, p1: Vector3<f32>, objects: &mut Vec<Object>, material: Material) {
+       objects.push(
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone(), false));
+            objects.push( Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone(), true));
+            objects.push( Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone(), false));
+            objects.push( Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone(), true));
+            objects.push(Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone(), false));
+            objects.push(Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material, true));
     }
 
-    fn bounding_box(&self) -> &AABB {
-        &self.bounding_box
-    }
-}

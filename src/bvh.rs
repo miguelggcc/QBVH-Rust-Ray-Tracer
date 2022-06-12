@@ -1,24 +1,128 @@
+use std::collections::VecDeque;
+
 use crate::{
     aabb::{surrounding_box, AABB},
     object::{Hittable, Object},
     ray::HitRecord,
 };
 
-#[derive(Clone)]
-pub struct BVHNode {
-    left: Box<Object>,
-    right: Box<Object>,
-    bounding_box: AABB,
+pub struct BVH {
+    bvh:  Vec<BVHNode>,
 }
-impl BVHNode {
-    pub fn new(left: Box<Object>, right: Box<Object>, bounding_box: AABB) -> Self {
-        Self {
-            left,
-            right,
-            bounding_box,
-        }
+
+impl BVH{
+    pub fn build(objects: &mut [Object]) -> Self {
+let mut indices: Vec<usize> = (0..objects.len()).collect();
+let mut nodes = vec![];
+        BVHNode::from(objects, &mut nodes, &mut indices);
+
+        Self{bvh: nodes}
     }
-    pub fn from(objects: &mut [Object]) -> Object {
+
+    pub fn intersect<'objects>(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32,objects: &'objects[Object])->Option<HitRecord<'objects>>{
+        if self.bvh.is_empty(){
+            return None;
+        }
+
+        //let mut list_of_objects = vec![];
+        let mut stack = VecDeque::new();
+        let mut t_max = t_max;
+        let mut hit = None;
+         stack.push_back(0);
+        while !stack.is_empty(){
+            let node = &self.bvh[stack.pop_back().unwrap()];
+
+            match node{
+                BVHNode::Leaf { object_index }=>{
+                let object = &objects[*object_index];
+                 let candidate_hit_record = object.hit(r,t_min,t_max);
+                if let Some(candidate_hit) = candidate_hit_record{
+                    if candidate_hit.t<t_max{
+                        t_max = candidate_hit.t;
+                        hit = Some(candidate_hit);
+                    }
+                }
+                }
+                BVHNode::Node { left_index, left_bb, right_index, right_bb, axis }=>{
+
+                    let is_neg =[r.direction.x<0.0, r.direction.y<0.0, r.direction.z<0.0];
+                    if is_neg[*axis as usize]{
+                        if right_bb.hit(r, t_min, t_max){
+                            stack.push_back(*right_index);
+                        }
+                         if left_bb.hit(r, t_min, t_max){
+                            stack.push_back(*left_index);
+                        }
+                    }  else{
+                        if left_bb.hit(r, t_min, t_max){
+                            stack.push_back(*left_index);
+                        }
+                         if right_bb.hit(r, t_min, t_max){
+                            stack.push_back(*right_index);
+                        }
+                }   
+                      
+                }
+    
+            }
+        } 
+        hit     
+}
+/*  pub fn intersect<'objects>(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32,objects: &'objects[Object])->Option<HitRecord<'objects>>{
+        if self.bvh.is_empty(){
+            return None;
+        }
+
+        let mut index = 0;
+        let max_length = self.bvh.len();
+        let mut list_of_objects = vec![];
+
+        while index < max_length{
+            let node = &self.bvh[index];
+
+            if node.next_index == usize::MAX{
+                let object = &objects[node.object_index];
+                index = node.exit_index;
+                 list_of_objects.push(object);        
+            }
+            else if node.bounding_box.hit(r, t_min, t_max){
+                index = node.next_index;
+            } else{
+                index = node.exit_index;
+            }       
+        }
+        if list_of_objects.is_empty(){
+        return None;}
+        let mut closer_t = f32::MAX;
+        let mut closer_hit = None;
+        for object in list_of_objects{
+            if let Some(hit) = object.hit(r,t_min,t_max){
+            if hit.t<closer_t{
+                closer_t = hit.t;
+                closer_hit = Some(hit);
+            }
+        }
+        }    
+        closer_hit    */
+}
+
+#[derive(Clone)]
+pub enum BVHNode{
+    Node{
+        left_index: usize,
+        left_bb : AABB,
+        right_index: usize,
+        right_bb: AABB,
+        axis: u8,
+    },
+    Leaf{
+        object_index: usize,
+    }
+}
+
+impl BVHNode {
+    
+    pub fn from(objects: &mut [Object], nodes : &mut Vec<BVHNode>,indices: &mut [usize]) -> (AABB,usize) {
         fn sort_objects(objects: &mut [Object], axis: u8) {
             objects.sort_by(|object1, object2| {
                 (object1.bounding_box().centroid2(axis))
@@ -26,8 +130,12 @@ impl BVHNode {
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
-        if objects.len() == 1 {
-            objects[0].clone()
+                
+ if objects.len() == 1 {
+
+        nodes.push(BVHNode::Leaf { object_index: indices[0] });
+        (objects[0].bounding_box().clone(),nodes.len()-1)
+
         } else {
             // From @cbiffle
             fn axis_range(objects: &mut [Object], axis: u8) -> f32 {
@@ -55,46 +163,74 @@ impl BVHNode {
                     0
                 }
             };
-
-            //let axis = rng.gen_range(0..3);
+            let node_index = nodes.len();
+            nodes.push(BVHNode::default());
             sort_objects(objects, axis);
 
             let (objects_left, objects_right) = objects.split_at_mut(objects.len() / 2);
-            let left = BVHNode::from(objects_left);
-            let right = BVHNode::from(objects_right);
+            let (indices_left,indices_right) = indices.split_at_mut(indices.len() / 2);
 
-            let left_bb = left.bounding_box();
-            let right_bb = right.bounding_box();
+            let (left_bb,left_index) = BVHNode::from(objects_left, nodes,  indices_left);
+            let (right_bb,right_index) = BVHNode::from(objects_right, nodes,  indices_right);
 
-            let bounding_box = surrounding_box(left_bb, right_bb);
-            Object::build_bvhnode(Box::new(left), Box::new(right), bounding_box)
+            nodes[node_index] = BVHNode::Node {left_index,left_bb: left_bb.clone(), right_index, right_bb:right_bb.clone(), axis};
+
+        (surrounding_box(&left_bb,&right_bb), node_index)
         }
+    }
+
+    /*    pub fn create_flat_branch(&self, nodes: &[BVHNode], bounding_box: AABB, flat_bvh: &mut Vec<LinearBVHNode>, offset: usize)->usize{
+
+        let dummy_linear_node = LinearBVHNode{ bounding_box: AABB::new(Vector3::new(0.0,0.0,0.0), Vector3::new(0.0,0.0,0.0)), next_index:0, exit_index:0, object_index:0 };
+        flat_bvh.push(dummy_linear_node);
+        assert_eq!(flat_bvh.len() - 1, offset);
+        let index_after_subtree = self.flatten_bvhtree(nodes, flat_bvh, offset+1);
+
+        let next_node = LinearBVHNode{ bounding_box, next_index: offset+1, exit_index: index_after_subtree,  object_index: usize::MAX,};
+
+        flat_bvh[offset] = next_node;
+        index_after_subtree
+}
+
+pub fn flatten_bvhtree(&self, nodes: &[BVHNode], flat_bvh:&mut Vec<LinearBVHNode>, offset: usize) -> usize {
+
+    match self {
+        BVHNode::Node{left_index, left_bb,right_index,right_bb} => {
+         
+         let index_after_left = nodes[*left_index].create_flat_branch(nodes, left_bb.clone(),flat_bvh,offset);
+         return nodes[*right_index].create_flat_branch(nodes, right_bb.clone(), flat_bvh,index_after_left);
+
+         
+        },
+        BVHNode::Leaf{ object_index }=>{
+            let leaf_node = LinearBVHNode{ bounding_box: AABB::new(Vector3::new(0.0,0.0,0.0), Vector3::new(0.0,0.0,0.0)), next_index: usize::MAX, exit_index: offset+1, object_index:*object_index };
+            flat_bvh.push(leaf_node);
+            return offset+1;
+        }
+   
+        
+    }
+} */
+
+}
+
+impl Default for BVHNode{
+    fn default()->Self{
+    Self::Leaf{object_index:0}
     }
 }
-impl Hittable for BVHNode {
-    #[inline(always)]
-    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        if !self.bounding_box.hit(r, t_min, t_max) {
-            return None;
-        }
-        let hit_left = self.left.hit(r, t_min, t_max);
-        let hit_right = self.right.hit(r, t_min, t_max);
 
-        match (&hit_left, &hit_right) {
-            (Some(left), Some(right)) => {
-                if left.t < right.t {
-                    hit_left
-                } else {
-                    hit_right
-                }
-            }
-            (Some(_), None) => hit_left,
-            (None, Some(_)) => hit_right,
-            _ => None,
-        }
-    }
-
-    fn bounding_box(&self) -> &AABB {
-        &self.bounding_box
-    }
+/*#[derive(Clone)]
+pub struct LinearBVHNode {
+    left_index: i32,
+    left_bb : AABB,
+    right_index: i32,
+    right_bb: AABB,
 }
+
+
+impl Default for LinearBVHNode{
+     fn default()->Self{
+         let dummy_bb =  AABB::new(Vector3::new(0.0,0.0,0.0), Vector3::new(0.0,0.0,0.0));
+        Self{left_index: 0, left_bb: dummy_bb.clone(), right_index: 0, right_bb: dummy_bb}
+    */

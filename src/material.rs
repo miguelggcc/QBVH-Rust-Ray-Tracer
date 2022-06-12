@@ -10,6 +10,7 @@ use crate::{
 };
 const PI: f32 = std::f32::consts::PI;
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub enum Material {
     Lambertian {
@@ -164,7 +165,7 @@ impl Material {
         }
     }
 
-    pub fn scattering_pdf(
+    /*pub fn scattering_pdf(
         &self,
         r_in: &Ray,
         hit: &HitRecord,
@@ -202,7 +203,7 @@ impl Material {
             }
             _ => 1.0,
         }
-    }
+    }*/
 
     pub fn emit(&self, hit: &HitRecord) -> Vector3<f32> {
         match self {

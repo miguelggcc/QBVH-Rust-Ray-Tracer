@@ -14,8 +14,13 @@ impl AABB {
     pub fn new(minimum: Vector3<f32>, maximum: Vector3<f32>) -> Self {
         Self { minimum, maximum }
     }
+    #[inline(always)]
     pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> bool {
-        let inv_d = Vector3::new(1.0 / r.direction.x, 1.0 / r.direction.y, 1.0 / r.direction.z);
+        let inv_d = Vector3::new(
+            1.0 / r.direction.x,
+            1.0 / r.direction.y,
+            1.0 / r.direction.z,
+        );
         let t0 = (self.minimum - r.origin) * inv_d;
         let t1 = (self.maximum - r.origin) * inv_d;
 
@@ -25,6 +30,7 @@ impl AABB {
         hit_max > hit_min
     }
 
+    #[inline(always)]
     pub fn centroid2(&self, axis: u8) -> f32 {
         self.minimum.get_axis(axis) + self.maximum.get_axis(axis)
     }

@@ -2,6 +2,7 @@ mod aabb;
 mod bvh;
 mod camera;
 mod constant_medium;
+mod integrator;
 mod material;
 mod object;
 mod pdf;
@@ -13,7 +14,6 @@ mod texture;
 mod transformations;
 mod triangle_mesh;
 mod utilities;
-mod integrator;
 
 use utilities::vector3::Vector3;
 
@@ -26,7 +26,7 @@ const DEPTH: i32 = 50;
 
 use show_image::{event, ImageInfo, ImageView, WindowOptions};
 
-use crate::{scenes::Scenes, integrator::World};
+use crate::{integrator::World, scenes::Scenes};
 
 #[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
