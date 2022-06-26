@@ -107,9 +107,8 @@ impl Hittable for Triangle {
     }
 }
 
-pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material) -> Vec<Object> {
-    let mut triangles = vec![];
-    let file = tobj::load_obj(
+pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, rotation_angle: f32, axis: u8, material: Material) -> Vec<Object> {
+    let object = tobj::load_obj(
         filename,
         &tobj::LoadOptions {
             single_index: false,
@@ -118,9 +117,12 @@ pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material
             ignore_lines: false,
         },
     );
-    assert!(file.is_ok());
+    assert!(object.is_ok());
+    let mut triangles = vec![];
+    let cos = rotation_angle.to_radians().cos();
+    let sin = rotation_angle.to_radians().sin();
 
-    let (models, _) = file.expect("Failed to load OBJ file");
+    let (models, _) = object.expect("Failed to load OBJ file");
     for (i, m) in models.iter().enumerate() {
         let mesh = &m.mesh;
 
@@ -151,12 +153,18 @@ pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material
                 mesh.positions[3 * ind2 + 2].into(),
             );
 
+            let p0 = p0.rotate(axis,cos,sin);
+            let p1 = p1.rotate(axis, cos, sin);
+            let p2 = p2.rotate(axis, cos, sin);
+            
             let a = p1 - p0;
             let b = p2 - p0;
             let normal = Vector3::cross(a, b).norm();
             v_normal[ind0] += normal;
             v_normal[ind1] += normal;
             v_normal[ind2] += normal;
+
+
 
             triangles.push(Object::get_triangles_vertices(
                 p0 * scale + offset,
@@ -176,5 +184,6 @@ pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, material: Material
             )
         }
     }
+
     triangles
 }

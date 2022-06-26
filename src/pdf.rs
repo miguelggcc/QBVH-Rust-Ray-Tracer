@@ -1,7 +1,7 @@
 use rand::prelude::{SliceRandom, ThreadRng};
 use rand::Rng;
 
-use crate::object::Object;
+use crate::object::{Object, self};
 use crate::utilities::math::fmax;
 use crate::utilities::onb::ONB;
 use crate::Vector3;
@@ -18,6 +18,7 @@ impl PDFType<'_> {
     pub fn value(&self, direction: Vector3<f32>) -> f32 {
         match self {
             Self::PDFObj { pdf } => {
+                if pdf.objects.is_empty(){return 0.0};
                 let acc: f32 = pdf
                     .objects
                     .iter()
@@ -35,6 +36,7 @@ impl PDFType<'_> {
                 let random_normal =
                     ((pdf.r_in_direction * (-1.0)).norm() + direction.norm()).norm();
                 let cosine = fmax(Vector3::dot(random_normal, pdf.normal), 0.0);
+      
                 let normal_pdf = (pdf.exponent + 1.0) / (2.0 * PI) * cosine.powf(pdf.exponent);
 
                 normal_pdf / (4.0 * Vector3::dot(pdf.r_in_direction * (-1.0), random_normal))
@@ -48,13 +50,15 @@ impl PDFType<'_> {
             Self::PDFCosine { pdf } => pdf.onb.local(Vector3::random_cosine_direction(rng)),
             Self::PDFSphere { pdf: _ } => Vector3::random_in_unit_sphere(rng),
             Self::PDFBlinnPhongSpec { pdf } => {
+                loop{
                 let direction = pdf
                     .onb
                     .local(Vector3::random_cosine_direction_exponent(pdf.exponent, rng));
                 if Vector3::dot(direction, pdf.normal) < 0.0 {
-                    return Vector3::new(1.0, 1.0, 1.0);
+                   continue
                 }
-                direction
+                return direction;
+            }
             }
         }
     }
@@ -123,12 +127,12 @@ impl<'a> PDFMixture<'a> {
     pub fn new(p: &'a PDFType, q: &'a PDFType) -> Self {
         Self { p, q }
     }
-    pub fn value(&self, direction: Vector3<f32>) -> f32 {
-        0.5 * self.p.value(direction) + 0.5 * self.q.value(direction)
+    pub fn value(&self, chance: f32, direction: Vector3<f32>) -> f32 {
+        chance * self.p.value(direction) + (1.0-chance) * self.q.value(direction)
     }
 
-    pub fn generate(&self, rng: &mut ThreadRng) -> Vector3<f32> {
-        if rng.gen::<f32>() < 0.5 {
+    pub fn generate(&self,chance:f32, rng: &mut ThreadRng) -> Vector3<f32> {
+        if rng.gen::<f32>() <chance {
             self.p.generate(rng)
         } else {
             self.q.generate(rng)

@@ -1,8 +1,8 @@
-use std::{fs::File, io::BufReader, path::Path, sync::Arc};
+use std::{fs::File, io::BufReader, path::Path, sync::Arc, mem};
 
 use crate::{
-    bvh::BVHNode, camera::Camera, material::Material, object::Object, texture::Texture,
-    triangle_mesh::load, utilities::vector3::Vector3,
+    camera::Camera, material::Material, object::Object, texture::Texture,
+    utilities::vector3::Vector3, triangle_mesh, rectangle::Prism,
 };
 use image::codecs::hdr::HdrDecoder;
 use rand::Rng;
@@ -17,10 +17,11 @@ pub enum Scenes {
     Volumes,
     Balls,
     Model3D,
+    David,
 }
 
 impl Scenes {
-    pub fn get(&self, width: f32, height: f32) -> (Vec<Object>, Camera, Vector3<f32>) {
+    pub fn get(&self, width: f32, height: f32) -> SceneConfig {
         let mut rng = rand::thread_rng();
         match self {
             Self::Basic => {
@@ -107,7 +108,7 @@ impl Scenes {
                     1.0,
                     material3,
                 ));
-                (objects, camera, Vector3::new(0.5, 0.7, 1.0))
+                SceneConfig::new(objects, camera, vec![],Vector3::new(0.5, 0.7, 1.0))
             }
 
             Self::BasicChecker => {
@@ -198,7 +199,7 @@ impl Scenes {
                     1.0,
                     material3,
                 ));
-                (objects, camera, Vector3::new(0.5, 0.7, 1.0))
+                SceneConfig::new(objects, camera, vec![], Vector3::new(0.5, 0.7, 1.0))
             }
             Self::HDRITest => {
                 let path = Path::new("HDRIs/sun.hdr");
@@ -269,7 +270,7 @@ impl Scenes {
                     Object::build_xz_rect(-5.0, 5.0, -5.0, 5.0, -0.98, material_ground, false),
                 ];
 
-                (objects, camera, Vector3::new(0.5, 0.7, 1.0))
+                SceneConfig::new(objects, camera, vec![], Vector3::new(0.5, 0.7, 1.0))
             }
 
             Self::HDRISun => {
@@ -341,7 +342,7 @@ impl Scenes {
                     Object::build_xz_rect(-5.0, 5.0, -5.0, 5.0, -0.98, material_ground, false),
                 ];
 
-                (objects, camera, Vector3::new(0.5, 0.7, 1.0))
+                SceneConfig::new(objects, camera, vec![],Vector3::new(0.5, 0.7, 1.0))
             }
 
             Self::RectangleLight => {
@@ -430,10 +431,12 @@ impl Scenes {
                     false,
                 ));
                 objects.push(Object::build_xy_rect(
-                    3.0, 5.0, 1.0, 3.0, -1.99, difflight, false,
+                    3.0, 5.0, 1.0, 3.0, -1.99, difflight.clone(), false,
                 ));
 
-                (objects, camera, Vector3::new(0.1, 0.2, 0.4))
+                SceneConfig::new(objects, camera, vec![Object::build_xy_rect(
+                    3.0, 5.0, 1.0, 3.0, -1.99, difflight, false,
+                )],Vector3::new(0.1, 0.2, 0.4))
             }
 
             Self::CornellBox => {
@@ -510,15 +513,16 @@ impl Scenes {
                     fuzz: 0.0,
                 };*/
 
-                /*let box1 = Object::build_prism(
+                
+                let mut box1 = Prism::build_prism(
                     Vector3::new(0.0, 0.0, 0.0),
                     Vector3::new(165.0, 330.0, 165.0),
-                    white,
-                )
-                .rotate_y(15.0)
-                .translate(Vector3::new(265.0, 0.0, 295.0));*/
+                    white.clone(),
+                ).rotate_y(15.0)
+                .translate(Vector3::new(265.0, 0.0, 295.0));
+                
 
-                /*let box2 = Object::build_prism(
+                /*let box2 = Prism::build_prism(
                     Vector3::new(0.0, 0.0, 0.0),
                     Vector3::new(165.0, 165.0, 165.0),
                     white.clone(),
@@ -533,10 +537,15 @@ impl Scenes {
                         index_of_refraction: 1.5,
                     },
                 );
-                //objects.push(box1);
+                objects.extend(mem::take(&mut box1.faces));
                 objects.push(sphere);
 
-                (objects, camera, Vector3::new(0.0, 0.0, 0.0))
+                SceneConfig::new(objects, camera, vec![Object::build_xz_rect(
+                    213.0, 343.0, 227.0, 332.0, 554.0, Material::default(), true,
+                ),Object::build_sphere(
+                    Vector3::new(190.0, 90.0, 190.0),
+                    90.0,
+                    Material::default())], Vector3::new(0.0, 0.0, 0.0))
             }
             Scenes::Volumes => {
                 let look_from = Vector3::new(478.0, 278.0, -600.0);
@@ -558,7 +567,7 @@ impl Scenes {
                 let ground = Material::Lambertian {
                     albedo: Vector3::new(0.48, 0.83, 0.53),
                 };
-                //let mut boxes = vec![];
+                let mut boxes = vec![];
                 let boxes_per_side = 20;
 
                 for i in 0..boxes_per_side {
@@ -571,14 +580,16 @@ impl Scenes {
                         let y1 = rng.gen_range(1.0..101.0);
                         let z1 = z0 + w;
 
-                        /*boxes.push(Object::build_prism(
+                        /*
+                        boxes.push(Object::build_prism(
                             Vector3::new(x0, y0, z0),
                             Vector3::new(x1, y1, z1),
                             ground.clone(),
-                        ));*/
+                        ));
+                        */
                     }
                 }
-                let mut objects = vec![]; //BVHNode::from(&mut boxes, &mut 0)];
+                let mut objects = boxes;
 
                 let light = Material::DiffuseLight {
                     texture: Texture::SolidColor {
@@ -665,13 +676,17 @@ impl Scenes {
                         white.clone(),
                     ));
                 }
-                /*objects.push(
-                    BVHNode::from(&mut box_of_balls, &mut 0)
+                /*
+                objects.push(
+                    BVHNode::from(&mut box_of_balls)
                         .rotate_y(15.0)
                         .translate(Vector3::new(-100.0, 270.0, 395.0)),
-                );*/
+                );
+                */
 
-                (objects, camera, Vector3::new(0.0, 0.0, 0.0))
+                SceneConfig::new(objects, camera, vec![Object::build_xz_rect(
+                    123.0, 423.0, 147.0, 412.0, 554.0, Material::default(), true,
+                )],Vector3::new(0.0, 0.0, 0.0))
             }
             Self::Balls => {
                 let look_from = Vector3::new(378.0, 178.0, -640.0);
@@ -762,7 +777,9 @@ impl Scenes {
                     objects.push(sphere);
                 }
 
-                (objects, camera, Vector3::new(0.0, 0.0, 0.0))
+                SceneConfig::new(objects, camera, vec![Object::build_xz_rect(
+                    107.5, 647.5, 127.0, 372.0, 354.9, Material::default(), true,
+                )],Vector3::new(0.0, 0.0, 0.0))
             }
             Self::Model3D => {
                 let look_from = Vector3::new(0.0, 0.1, 2.0);
@@ -790,17 +807,19 @@ impl Scenes {
                     albedo: Vector3::new(1.0, 0.86, 0.57),
                     fuzz: 0.5,
                 };
-                let mut objects = vec![];
-                objects.append(&mut load(
+
+                let skull = crate::triangle_mesh::load(
                     "objs/skull.obj",
                     0.04,
                     Vector3::new(-0.1, 0.0, 0.0),
+                    15.0,
+                    1,
                     Material::Dielectric {
                         index_of_refraction: 1.5,
                     },
-                ));
-                /*let mut objects =
-                vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];*/
+                );
+                let mut objects = skull;
+                //vec![skull.rotate_y(15.0).translate(Vector3::new(-0.1, 0.1, 0.0))];
                 objects.push(Object::build_xz_rect(
                     -2.0,
                     2.0,
@@ -810,10 +829,12 @@ impl Scenes {
                     Material::default(),
                     true,
                 ));
-                objects.append(&mut load(
+                objects.extend(crate::triangle_mesh::load(
                     "objs/dragon.obj",
                     0.013,
                     Vector3::new(0.1, 0.0, 0.0),
+                    0.0,
+                    0,
                     gold,
                 ));
                 objects.push(Object::build_xz_rect(
@@ -838,11 +859,137 @@ impl Scenes {
                 objects.push(Object::build_sphere(
                     Vector3::new(-0.05, 0.07, -1.0 + 0.07),
                     0.07,
-                    diffsphere.clone(),
+                    diffsphere,
                 ));
-                
-                (objects, camera, Vector3::new(0.0, 0.0, 0.0))
+                SceneConfig::new(objects, camera,vec![
+                    Object::build_xz_rect(-0.5, 0.5, -0.5, 0.5, 1.0, Material::default(), true),
+                    Object::build_sphere(
+                        Vector3::new(-0.05, 0.07, -1.0 + 0.07),
+                        0.07,
+                        Material::default(),
+                    ),
+                ], Vector3::new(0.0, 0.0, 0.0))
             }
+
+            Self::David => {
+                let look_from = Vector3::new(278.0, 278.0, 900.0);
+                let look_at = Vector3::new(278.0, 278.0, 0.0);
+                let vup = Vector3::new(0.0, 1.0, 0.0);
+                let dist_to_focus = 10.0;
+                let aperture = 0.0;
+
+                let camera = Camera::new(
+                    look_from,
+                    look_at,
+                    vup,
+                    30.0,
+                    width / height,
+                    aperture,
+                    dist_to_focus,
+                );
+
+                let red = Material::Lambertian {
+                    albedo: Vector3::new(0.65, 0.05, 0.05),
+                };
+                let white = Material::Lambertian {
+                    albedo: Vector3::new(0.73, 0.73, 0.73),
+                };
+                let green = Material::Lambertian {
+                    albedo: Vector3::new(0.12, 0.45, 0.15),
+                };
+
+                let difflight = Material::DiffuseLight {
+                    texture: Texture::SolidColor {
+                        albedo: Vector3::new(15.0, 15.0, 15.0),
+                    },
+                };
+
+                let mut objects = vec![Object::build_yz_rect(
+                    0.0, 555.0, -555.0, 200.0, 555.0, green, false,
+                )];
+                objects.push(Object::build_yz_rect(
+                    0.0, 555.0, -555.0, 200.0, 0.0, red, false,
+                ));
+                objects.push(Object::build_xz_rect(
+                    213.0, 343.0, -262.0, -157.0, 554.0, difflight, true,
+                ));
+                objects.push(Object::build_xz_rect(
+                    0.0,
+                    555.0,
+                    -555.0,
+                    200.0,
+                    0.0,
+                    white.clone(),
+                    false,
+                ));
+                objects.push(Object::build_xz_rect(
+                    0.0,
+                    555.0,
+                    -555.0,
+                    200.0,
+                    555.0,
+                    white.clone(),
+                    false,
+                ));
+                objects.push(Object::build_xy_rect(
+                    0.0,
+                    555.0,
+                    0.0,
+                    555.0,
+                    -555.0,
+                    white.clone(),
+                    false,
+                ));
+                let aluminum = Material::Metal {
+                    albedo: Vector3::new(0.8, 0.85, 0.88),
+                    fuzz: 0.0,
+                };
+
+                /*
+                let box1 = Object::build_prism(
+                    Vector3::new(0.0, 0.0, 0.0),
+                    Vector3::new(165.0, 330.0, 165.0),
+                    white,
+                )
+                .rotate_y(15.0)
+                .translate(Vector3::new(265.0, 0.0, 295.0));
+                */
+
+                /*let box2 = Object::build_prism(
+                    Vector3::new(0.0, 0.0, 0.0),
+                    Vector3::new(165.0, 165.0, 165.0),
+                    white.clone(),
+                )
+                .rotate_y(-18.0)
+                .translate(Vector3::new(130.0, 0.0, 65.0));*/
+
+                
+                //objects.push(box1);
+
+                objects.extend(triangle_mesh::load("objs/david.obj", 1.2, Vector3::new(185.0,0.0,-230.0), -90.0, 0, Material::Lambertian{albedo: Vector3::new(237.0/255.0,192.0/255.0,151.0/255.0)}  ));
+
+                SceneConfig::new(objects, camera, vec![Object::build_xz_rect(
+                    213.0, 343.0, -262.0, -157.0, 554.0, Material::default(), true,
+                )],Vector3::new(0.0, 0.0, 0.0))
+            }
+        }
+    }
+}
+
+pub struct SceneConfig{
+    pub objects: Vec<Object>,
+    pub camera: Camera,
+    pub light: Vec<Object>,
+    pub background: Vector3<f32>,
+}
+
+impl SceneConfig{
+    pub fn new(  objects: Vec<Object>,
+         camera: Camera,
+         light: Vec<Object>,
+         background: Vector3<f32>,)->Self{
+        Self{
+            objects,camera,light,background
         }
     }
 }

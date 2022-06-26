@@ -1,8 +1,6 @@
-use crate::bvh::BVH;
 use crate::camera::Camera;
-use crate::material::Material;
 use crate::material::ScatterRecord;
-use crate::object::Object;
+use crate::object::{Object};
 use crate::pdf::{PDFMixture, PDFType, PDF};
 use crate::scenes::Scenes;
 use crate::utilities::vector3::Vector3;
@@ -10,14 +8,15 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
 use crate::ray::Ray;
+use crate::simd_bvh::SceneBVH;
 
 use rand::{prelude::ThreadRng, Rng};
 
 pub struct World {
     pub camera: Camera,
     pub background: Vector3<f32>,
-    pub bvh_tree: BVH,
-    pub objects: Vec<Object>,
+    pub bvh: SceneBVH,
+    pub light: Vec<Object>,
     pub aa: i32,
     pub depth: i32,
     width: f32,
@@ -25,14 +24,13 @@ pub struct World {
 }
 impl World {
     pub fn new(scene: Scenes, width: f32, height: f32, aa: i32, depth: i32) -> Self {
-        let (mut objects, camera, background) = scene.get(width, height);
-        let bvh_tree = BVH::build(&mut objects);
+        let scene_config = scene.get(width, height);
 
         Self {
-            camera,
-            background,
-            bvh_tree,
-            objects,
+            camera: scene_config.camera,
+            background: scene_config.background,
+            light: scene_config.light,
+            bvh: SceneBVH::from(scene_config.objects),
             aa,
             depth,
             width,
@@ -46,37 +44,56 @@ impl World {
         pb.set_style(ProgressStyle::default_bar().template("{bar:40.green/white}  {percent} %"));
         pb.set_draw_delta(n / 100);
 
-        let light = [
+        /*let light = [
             Object::build_xz_rect(-0.5, 0.5, -0.5, 0.5, 1.0, Material::default(), true),
             Object::build_sphere(
                 Vector3::new(-0.05, 0.07, -1.0 + 0.07),
                 0.07,
                 Material::default(),
             ),
-        ];
-        frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
+        ];*/
+
+        /*let light = [Object::build_xz_rect(
+            213.0, 343.0, 227.0, 332.0, 554.0, Material::default(), true,
+        ),Object::build_sphere(
+            Vector3::new(190.0, 90.0, 190.0),
+            90.0,
+            Material::Dielectric {
+                index_of_refraction: 1.5,
+            })];*/
+
+       /*let light = [Object::build_xz_rect(
+            213.0, 343.0, -262.0, -157.0, 554.0, Material::default(), true,
+        )];*/
+        let x_strata = (self.aa as f32).sqrt().floor() as usize;
+let  y_strata = (self.aa as f32/x_strata as f32).floor() as usize;
+
+      
+frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
             let mut rng = rand::thread_rng();
 
             let mut pixel_color = Vector3::new(0.0, 0.0, 0.0);
-            for _ in 0..self.aa {
-                let x = (i % self.width as usize) as f32;
-                let y = (i / self.width as usize) as f32;
+            let x = (i % self.width as usize) as f32;
+            let y = (i / self.width as usize) as f32;
 
-                let u = (x + rng.gen::<f32>()) / (self.width - 1.0);
-                let v = 1.0 - (y + rng.gen::<f32>()) / (self.height - 1.0);
+            for i_strata in 0..x_strata{
+                for j_strata in 0..y_strata{  
+            
+                let u = (x + (i_strata as f32 + rng.gen::<f32>())/x_strata as f32) / (self.width - 1.0);
+                let v = 1.0 - (y +(j_strata as f32 + rng.gen::<f32>())/y_strata as f32) / (self.height - 1.0);
 
                 let r = self.camera.get_ray(u, v, &mut rng);
                 pixel_color += ray_color(
-                    &self.bvh_tree,
+                    &self.bvh,
                     r,
                     self.depth,
                     self.background,
-                    &light,
-                    &self.objects,
+                    &self.light,
                     &mut rng,
                 );
             }
-            pixel.copy_from_slice(&get_color(&mut pixel_color, self.aa as f32));
+        }
+            pixel.copy_from_slice(&get_color(&mut pixel_color, (x_strata*y_strata) as f32));
             pb.inc(1);
         });
         pb.finish_and_clear();
@@ -85,19 +102,19 @@ impl World {
 
 // Monte Carlo Integrator
 fn ray_color(
-    world: &BVH,
+    bvh: &SceneBVH,
     r: Ray,
     depth_t: i32,
     background: Vector3<f32>,
     light: &[Object],
-    objects: &[Object],
     rng: &mut ThreadRng,
 ) -> Vector3<f32> {
     let mut color = Vector3::new(1.0, 1.0, 1.0);
+    let chance = if light.is_empty(){0.0} else{0.5};
 
     let mut scatter_ray = r;
     for _depth in 0..depth_t {
-        if let Some(hit) = world.intersect(&scatter_ray, 0.001, f32::INFINITY, objects) {
+        if let Some(hit) = bvh.hit(&scatter_ray, 0.001, f32::INFINITY) {
             if let Some(scatter) = hit.material.scatter(&scatter_ray, &hit, rng) {
                 match scatter {
                     ScatterRecord::Specular {
@@ -113,9 +130,13 @@ fn ray_color(
                             pdf: PDF::new(hit.p, light),
                         };
                         let mixture = PDFMixture::new(&pdf_lights, &pdf);
-                        let scattered = Ray::new(hit.p, mixture.generate(rng));
-                        let pdf_val = mixture.value(scattered.direction);
-                        color = color * attenuation * pdf.value(scattered.direction) / pdf_val;
+                        let scattered = Ray::new(hit.p, mixture.generate(chance ,rng));
+                        let pdf_val = mixture.value(chance ,scattered.direction);
+                        let pdf_multiplicator = pdf.value(scattered.direction) / pdf_val;
+                       
+                        if pdf_multiplicator==pdf_multiplicator{
+                            color = color * attenuation * pdf_multiplicator;
+                        }
 
                         scatter_ray = scattered;
 

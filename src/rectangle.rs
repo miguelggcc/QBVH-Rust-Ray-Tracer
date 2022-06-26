@@ -6,7 +6,7 @@ use crate::{
     material::Material,
     object::{Hittable, Object},
     ray::{HitRecord, Ray},
-    utilities::vector3::Vector3,
+    utilities::{vector3::Vector3},
 };
 
 #[derive(Clone)]
@@ -164,7 +164,9 @@ impl XZRect {
             let area = (self.x1 - self.x0) * (self.z1 - self.z0);
             let distance_2 = hit.t * hit.t * v.magnitude2();
             let cosine = Vector3::dot(v, hit.normal).abs() / v.magnitude();
-
+            if cosine==0.0{
+                return f32::MAX;
+            }
             return distance_2 / (cosine * area);
         }
         0.0
@@ -273,58 +275,35 @@ impl Hittable for YZRect {
     }
 }
 
-pub fn push_prism(
-    p0: Vector3<f32>,
-    p1: Vector3<f32>,
-    objects: &mut Vec<Object>,
-    material: Material,
-) {
-    objects.push(Object::build_xy_rect(
-        p0.x,
-        p1.x,
-        p0.y,
-        p1.y,
-        p1.z,
-        material.clone(),
-        false,
-    ));
-    objects.push(Object::build_xy_rect(
-        p0.x,
-        p1.x,
-        p0.y,
-        p1.y,
-        p0.z,
-        material.clone(),
-        true,
-    ));
-    objects.push(Object::build_xz_rect(
-        p0.x,
-        p1.x,
-        p0.z,
-        p1.z,
-        p1.y,
-        material.clone(),
-        false,
-    ));
-    objects.push(Object::build_xz_rect(
-        p0.x,
-        p1.x,
-        p0.z,
-        p1.z,
-        p0.y,
-        material.clone(),
-        true,
-    ));
-    objects.push(Object::build_yz_rect(
-        p0.y,
-        p1.y,
-        p0.z,
-        p1.z,
-        p1.x,
-        material.clone(),
-        false,
-    ));
-    objects.push(Object::build_yz_rect(
-        p0.y, p1.y, p0.z, p1.z, p0.x, material, true,
-    ));
+
+#[derive(Clone)]
+pub struct Prism {
+    pub faces: Vec<Object>,
 }
+
+impl Prism {
+    pub fn build_prism(p0: Vector3<f32>, p1: Vector3<f32>, material: Material) ->Prism {
+        let faces = vec![
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p1.z, material.clone(), false),
+            Object::build_xy_rect(p0.x, p1.x, p0.y, p1.y, p0.z, material.clone(), true),
+            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p1.y, material.clone(), false),
+            Object::build_xz_rect(p0.x, p1.x, p0.z, p1.z, p0.y, material.clone(), true),
+            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p1.x, material.clone(), false),
+            Object::build_yz_rect(p0.y, p1.y, p0.z, p1.z, p0.x, material, true),
+        ];
+        Self {
+            faces,
+        }
+    }
+
+    pub fn rotate_y(mut self,angle:f32)-> Prism{
+        self.faces.iter_mut().for_each(|face| *face =  face.clone().rotate_y(angle));
+        self
+    }
+
+    pub fn translate(mut self,offset:Vector3<f32>)-> Prism{
+        self.faces.iter_mut().for_each(|face| *face =  face.clone().translate(offset));
+        self
+    }
+}
+

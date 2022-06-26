@@ -1,3 +1,5 @@
+#![feature(portable_simd)]
+
 mod aabb;
 mod bvh;
 mod camera;
@@ -9,12 +11,15 @@ mod pdf;
 mod ray;
 mod rectangle;
 mod scenes;
+mod simd;
+mod simd_bvh;
 mod sphere;
 mod texture;
 mod transformations;
 mod triangle_mesh;
 mod utilities;
 
+use show_image::{event, ImageInfo, ImageView, WindowOptions};
 use utilities::vector3::Vector3;
 
 use clap::{arg, command};
@@ -24,10 +29,11 @@ const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
 const DEPTH: i32 = 50;
 
-use show_image::{event, ImageInfo, ImageView, WindowOptions};
+//use show_image::{event, ImageInfo, ImageView, WindowOptions};
 
 use crate::{integrator::World, scenes::Scenes};
 
+#[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let commands = command!()
         .args(&[
@@ -43,11 +49,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "volumes",
                     "balls",
                     "3Dmodel",
+                    "david"
                 ])
-                .default_value("cornell_box"),
+                //.default_value("cornell_box"),
+                .default_value("3Dmodel"),
             arg!(-a --AA <AA>)
                 .help("Anti-aliasing: samples per pixel")
-                .default_value("500")
+                .default_value("50")
                 .validator(|a| a.parse::<i32>()),
         ])
         .get_matches();
@@ -62,6 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("volumes") => Scenes::Volumes,
         Some("balls") => Scenes::Balls,
         Some("3Dmodel") => Scenes::Model3D,
+        Some("david")=>Scenes::David,
         _ => {
             unreachable!()
         }
@@ -72,16 +81,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("'AA' is required and drawing will fail if its missing");
 
     let mut pixel_data = vec![0; WIDTH as usize * HEIGHT as usize * 4];
+
     let start = Instant::now();
     let world = World::new(scene, WIDTH as f32, HEIGHT as f32, aa, DEPTH);
+    let duration = start.elapsed();
+    println!("Time elapsed in building: {:?}", duration);
+
+    let start = Instant::now();
     world.draw(&mut pixel_data);
     let duration = start.elapsed();
-    println!("Time elapsed: {:?}", duration);
+    println!("Time elapsed rendering: {:?}", duration);
 
-    image::save_buffer("image.png", &pixel_data, WIDTH, HEIGHT, image::ColorType::Rgba8).unwrap();
+    //image::save_buffer("image.png", &pixel_data, WIDTH, HEIGHT, image::ColorType::Rgba8).unwrap();
 
-
-   /*  let image = ImageView::new(ImageInfo::rgba8(WIDTH, HEIGHT), &pixel_data);
+    let image = ImageView::new(ImageInfo::rgba8(WIDTH, HEIGHT), &pixel_data);
 
     // Create a window with default options and display the image.
     let window = show_image::create_window(
@@ -100,7 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 break;
             }
         }
-    }*/
+    }
 
     Ok(())
 }

@@ -6,8 +6,7 @@ use std::{
     borrow::Borrow,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
-
-use super::math::{fmax, fmin};
+use super::math::{fmax, fmin, Axis};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vector3<T> {
@@ -92,16 +91,26 @@ where
         }
     }
     #[inline(always)]
-    pub fn get_axis(&self, axis: u8) -> T {
+    pub fn get_axis(&self, axis: Axis) -> T {
         match axis {
-            0 => self.x,
-            1 => self.y,
-            _ => self.z,
+            Axis::X => self.x,
+            Axis::Y => self.y,
+            Axis::Z => self.z,
         }
     }
 }
 
 impl Vector3<f32> {
+    #[inline(always)]
+pub fn rotate(&self, axis:u8, cos:f32, sin: f32)->Self{
+    match axis{
+        0=>Vector3::new(self.x, self.y*cos-self.z*sin,self.y*sin+self.z*cos),
+        1=> Vector3::new(self.x*cos+self.z*sin,self.y,-self.x*sin+self.z*cos),
+        _=> Vector3::new(self.x*cos-self.y*sin,self.x*sin+self.y*cos,self.z),
+    }
+    
+}
+
     #[inline(always)]
     pub fn min(&self, v: Self) -> Self {
         Vector3::new(fmin(self.x, v.x), fmin(self.y, v.y), fmin(self.z, v.z))
@@ -208,6 +217,7 @@ impl Vector3<f32> {
         let r_out_parallel = n * (-1.0) * (1.0 - r_out_perp.magnitude2()).abs().sqrt();
         r_out_perp + r_out_parallel
     }
+
 }
 
 impl<T> Mul for Vector3<T>
