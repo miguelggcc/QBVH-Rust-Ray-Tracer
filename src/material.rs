@@ -1,9 +1,8 @@
 #![allow(dead_code)]
 
-use crate::pdf::{PDFBlinnPhongSpec, PDFCosine, PDFSphere};
+use crate::pdf::{PDFCosine, PDFSphere, PDFBlinnPhongSpec};
 use rand::{prelude::ThreadRng, Rng};
 
-use crate::utilities::math::fmax;
 use crate::{
     pdf::PDFType,
     ray::{HitRecord, Ray},
@@ -133,23 +132,20 @@ impl Material {
                 m_specular,
                 exponent,
             } => {
-                let is_specular = rng.gen::<f32>() < *m_specular;
-                if is_specular {
-                    Some(ScatterRecord::Scatter {
-                        pdf: PDFType::PDFBlinnPhongSpec {
-                            pdf: PDFBlinnPhongSpec::new(r_in.direction, hit.normal, *exponent),
-                        },
-                        attenuation: Vector3::new(1.0, 1.0, 1.0),
-                    })
-                } else {
-                    let pdf_cosine = PDFType::PDFCosine {
-                        pdf: PDFCosine::new(hit.normal),
-                    };
-                    Some(ScatterRecord::Scatter {
-                        pdf: pdf_cosine,
+
+                let pdf_diffuse = PDFType::PDFCosine {
+                    pdf: PDFCosine::new(hit.normal),
+                };
+                let pdf_specular = PDFType::PDFBlinnPhongSpec {
+                    pdf: PDFBlinnPhongSpec::new(r_in.direction, hit.normal,*exponent)
+                };
+                    Some(ScatterRecord::SpecularDiffuse {
+                        pdf_diffuse,
+                        pdf_specular,
+                        m_specular: *m_specular,
                         attenuation: *color,
                     })
-                }
+                
             }
             Material::Blend {
                 material1,
@@ -166,7 +162,7 @@ impl Material {
         }
     }
 
-    pub fn scattering_pdf(
+    /*pub fn scattering_pdf(
         &self,
         r_in: &Ray,
         hit: &HitRecord,
@@ -204,7 +200,7 @@ impl Material {
             }
             _ => 1.0,
         }
-    }
+    }*/
 
     pub fn emit(&self, hit: &HitRecord) -> Vector3<f32> {
         match self {
@@ -257,4 +253,10 @@ pub enum ScatterRecord<'a> {
         pdf: PDFType<'a>,
         attenuation: Vector3<f32>,
     },
+    SpecularDiffuse{
+        pdf_specular: PDFType<'a>,
+        pdf_diffuse: PDFType<'a>,
+        m_specular: f32,
+        attenuation: Vector3<f32>,
+    }
 }

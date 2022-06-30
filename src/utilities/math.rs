@@ -15,8 +15,8 @@ pub fn fmax(a: f32, b: f32) -> f32 {
     }
 }
 
-#[derive(Copy,Clone)]
-pub enum Axis{
+#[derive(Copy, Clone)]
+pub enum Axis {
     X = 0,
     Y = 1,
     Z = 2,

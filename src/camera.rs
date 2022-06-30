@@ -7,6 +7,7 @@ pub struct Camera {
     pub viewport_height: f32,
     pub viewport_width: f32,
     pub lens_radius: f32,
+    pub exposure: f32,
     pub u: Vector3<f32>,
     pub v: Vector3<f32>,
     pub w: Vector3<f32>,
@@ -24,6 +25,7 @@ impl Camera {
         aspect_ratio: f32,
         aperture: f32,
         focus_dist: f32,
+        exposure: f32,
     ) -> Self {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
@@ -43,6 +45,7 @@ impl Camera {
             viewport_height,
             viewport_width,
             lens_radius,
+            exposure,
             u,
             v,
             w,

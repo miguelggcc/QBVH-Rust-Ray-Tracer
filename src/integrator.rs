@@ -1,6 +1,6 @@
 use crate::camera::Camera;
 use crate::material::ScatterRecord;
-use crate::object::{Object};
+use crate::object::Object;
 use crate::pdf::{PDFMixture, PDFType, PDF};
 use crate::scenes::Scenes;
 use crate::utilities::vector3::Vector3;
@@ -93,7 +93,7 @@ frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
                 );
             }
         }
-            pixel.copy_from_slice(&get_color(&mut pixel_color, (x_strata*y_strata) as f32));
+            pixel.copy_from_slice(&get_color(&mut pixel_color, (x_strata*y_strata) as f32,self.camera.exposure));
             pb.inc(1);
         });
         pb.finish_and_clear();
@@ -132,11 +132,33 @@ fn ray_color(
                         let mixture = PDFMixture::new(&pdf_lights, &pdf);
                         let scattered = Ray::new(hit.p, mixture.generate(chance ,rng));
                         let pdf_val = mixture.value(chance ,scattered.direction);
-                        let pdf_multiplicator = pdf.value(scattered.direction) / pdf_val;
+                        let pdf_multiplicator = pdf.value(scattered.direction)/pdf_val;
                        
-                        if pdf_multiplicator==pdf_multiplicator{
                             color = color * attenuation * pdf_multiplicator;
-                        }
+
+                        scatter_ray = scattered;
+
+                        continue;
+                    }
+                    ScatterRecord::SpecularDiffuse { pdf_specular, pdf_diffuse, m_specular, attenuation } => {
+                        let pdf_lights = PDFType::PDFObj {
+                            pdf: PDF::new(hit.p, light),
+                        };
+                        let mixture_diffuse = PDFMixture::new(&pdf_lights, &pdf_diffuse);
+                        let mixture_specular = PDFMixture::new(&pdf_lights, &pdf_specular);
+
+                        let is_specular = rng.gen::<f32>() < m_specular;
+
+                        let scattered = if is_specular{
+                         Ray::new(hit.p, mixture_specular.generate(chance ,rng))
+                        } else {
+                            Ray::new(hit.p, mixture_diffuse.generate(chance ,rng))
+                         };
+                        let pdf_val = mixture_diffuse.value(chance ,scattered.direction)*(1.0-m_specular) + mixture_specular.value(chance ,scattered.direction)*m_specular;
+                        let pdf_multiplicator_diffuse = pdf_diffuse.value(scattered.direction)/pdf_val;
+                        let pdf_multiplicator_specular = pdf_specular.value(scattered.direction)/pdf_val;
+   
+                            color = color * (attenuation * pdf_multiplicator_diffuse* (1.0-m_specular) + Vector3::new(1.0,1.0,1.0)*pdf_multiplicator_specular * m_specular);
 
                         scatter_ray = scattered;
 
@@ -157,7 +179,7 @@ fn ray_color(
     Vector3::new(0.0, 0.0, 0.0)
 }
 
-fn get_color(color: &mut Vector3<f32>, samples_per_pixel: f32) -> [u8; 4] {
+fn get_color(color: &mut Vector3<f32>, samples_per_pixel: f32, exposure: f32) -> [u8; 4] {
     let mut r = color.x / samples_per_pixel;
     let mut g = color.y / samples_per_pixel;
     let mut b = color.z / samples_per_pixel;
@@ -167,23 +189,22 @@ fn get_color(color: &mut Vector3<f32>, samples_per_pixel: f32) -> [u8; 4] {
     r = r * (1.0 + r / exp) / (1.0 + r);
     g = g * (1.0 + g / exp) / (1.0 + g);
     b = b * (1.0 + b / exp) / (1.0 + b);
-    *color = Vector3::new((r).sqrt(), (g).sqrt(), (b).sqrt()); //fast gamma correction
+    *color = Vector3::new(r.powf(0.45), g.powf(0.45), b.powf(0.45)); //fast gamma correction
     color.to_rgbau8()
 }
-/*     //algorithm created by John Hable for Uncharted 2
+    /* //algorithm created by John Hable for Uncharted 2
+     *color*=exposure;
    let mut r  = color.x / samples_per_pixel;
    let mut g = color.y / samples_per_pixel;
    let mut b = color.z / samples_per_pixel;
    r = ((r*(0.15*r+0.05)+0.004)/(r*(0.15*r+0.5)+0.06))-0.02/0.30;
    g = ((g*(0.15*g+0.05)+0.004)/(g*(0.15*g+0.5)+0.06))-0.02/0.30;
    b = ((b*(0.15*b+0.05)+0.004)/(b*(0.15*b+0.5)+0.06))-0.02/0.30;
-
    let whitescale = 1.3790642466494378; //whitescale = 1/tonemap(11.2)
-
    *color = Vector3::new(
-        (r*whitescale).sqrt(),
-        (g*whitescale).sqrt(),
-        (b*whitescale).sqrt(),
+        (r*whitescale).powf(0.45),
+        (g*whitescale).powf(0.45),
+        (b*whitescale).powf(0.45),
     );
     color.to_rgbau8()
 }*/

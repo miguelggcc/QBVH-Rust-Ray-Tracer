@@ -1,7 +1,6 @@
 #![feature(portable_simd)]
 
 mod aabb;
-mod bvh;
 mod camera;
 mod constant_medium;
 mod integrator;
@@ -25,8 +24,6 @@ use utilities::vector3::Vector3;
 use clap::{arg, command};
 use std::time::Instant;
 
-const WIDTH: u32 = 640;
-const HEIGHT: u32 = 480;
 const DEPTH: i32 = 50;
 
 //use show_image::{event, ImageInfo, ImageView, WindowOptions};
@@ -49,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "volumes",
                     "balls",
                     "3Dmodel",
-                    "david"
+                    "david",
                 ])
                 //.default_value("cornell_box"),
                 .default_value("3Dmodel"),
@@ -57,7 +54,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .help("Anti-aliasing: samples per pixel")
                 .default_value("50")
                 .validator(|a| a.parse::<i32>()),
+                  arg!(-r --resolution <PXS>)
+        .help("Resolution")
+        .possible_values([
+           "480",
+           "720",
+           "1080",
         ])
+        .default_value("480")
+        .validator(|a| a.parse::<u32>()),
+        ],)
         .get_matches();
 
     let scene = match commands.value_of("scene") {
@@ -76,14 +82,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
+    let (width,height) = match commands.value_of("resolution"){
+        Some("480")=>(640,480),
+        Some("720")=>(1280,720),
+        Some("1080")=>(1920,1080),
+        _ => {
+            unreachable!()
+        }
+    };
+
     let aa: i32 = commands
         .value_of_t("AA")
         .expect("'AA' is required and drawing will fail if its missing");
 
-    let mut pixel_data = vec![0; WIDTH as usize * HEIGHT as usize * 4];
+    let mut pixel_data = vec![0; width as usize * height as usize * 4];
 
     let start = Instant::now();
-    let world = World::new(scene, WIDTH as f32, HEIGHT as f32, aa, DEPTH);
+    let world = World::new(scene, width as f32, height as f32, aa, DEPTH);
     let duration = start.elapsed();
     println!("Time elapsed in building: {:?}", duration);
 
@@ -92,14 +107,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start.elapsed();
     println!("Time elapsed rendering: {:?}", duration);
 
-    //image::save_buffer("image.png", &pixel_data, WIDTH, HEIGHT, image::ColorType::Rgba8).unwrap();
+    //image::save_buffer("image.png", &pixel_data, width, height, image::ColorType::Rgba8).unwrap();
 
-    let image = ImageView::new(ImageInfo::rgba8(WIDTH, HEIGHT), &pixel_data);
+    let image = ImageView::new(ImageInfo::rgba8(width, height), &pixel_data);
 
     // Create a window with default options and display the image.
     let window = show_image::create_window(
         "RayTracing, ctrl+S to save",
-        WindowOptions::default().set_size(Some([WIDTH, HEIGHT])),
+        WindowOptions::default().set_size(Some([width, height])),
     )
     .map_err(|e| e.to_string())?;
     window.set_image("image-001", image)?;

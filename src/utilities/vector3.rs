@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 
+use super::math::{fmax, fmin, Axis};
 use num::{Float, Num};
 use rand::{prelude::ThreadRng, Rng};
 use std::{
     borrow::Borrow,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
-use super::math::{fmax, fmin, Axis};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vector3<T> {
@@ -102,14 +102,25 @@ where
 
 impl Vector3<f32> {
     #[inline(always)]
-pub fn rotate(&self, axis:u8, cos:f32, sin: f32)->Self{
-    match axis{
-        0=>Vector3::new(self.x, self.y*cos-self.z*sin,self.y*sin+self.z*cos),
-        1=> Vector3::new(self.x*cos+self.z*sin,self.y,-self.x*sin+self.z*cos),
-        _=> Vector3::new(self.x*cos-self.y*sin,self.x*sin+self.y*cos,self.z),
+    pub fn rotate(&self, axis: u8, cos: f32, sin: f32) -> Self {
+        match axis {
+            0 => Vector3::new(
+                self.x,
+                self.y * cos - self.z * sin,
+                self.y * sin + self.z * cos,
+            ),
+            1 => Vector3::new(
+                self.x * cos + self.z * sin,
+                self.y,
+                -self.x * sin + self.z * cos,
+            ),
+            _ => Vector3::new(
+                self.x * cos - self.y * sin,
+                self.x * sin + self.y * cos,
+                self.z,
+            ),
+        }
     }
-    
-}
 
     #[inline(always)]
     pub fn min(&self, v: Self) -> Self {
@@ -134,6 +145,9 @@ pub fn rotate(&self, axis:u8, cos:f32, sin: f32)->Self{
             (self.z * 255.0) as u8,
             255,
         ]
+    }
+    pub fn luminance(self)->f32{
+        0.2126*self.x +0.7152*self.y+ 0.0722*self.z
     }
     #[inline(always)]
     pub fn random_vec(min: f32, max: f32, rng: &mut ThreadRng) -> Self {
@@ -217,7 +231,6 @@ pub fn rotate(&self, axis:u8, cos:f32, sin: f32)->Self{
         let r_out_parallel = n * (-1.0) * (1.0 - r_out_perp.magnitude2()).abs().sqrt();
         r_out_perp + r_out_parallel
     }
-
 }
 
 impl<T> Mul for Vector3<T>

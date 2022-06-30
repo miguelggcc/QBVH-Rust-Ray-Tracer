@@ -85,7 +85,10 @@ impl SceneBVH {
                     trees[tree_index].set_tree_children(
                         left_bb0.clone(),
                         left_index0,
-                        AABB::new(Vector3::new(f32::MAX,f32::MAX,f32::MAX), Vector3::new(f32::MAX,f32::MAX,f32::MAX)),
+                        AABB::new(
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                        ),
                         left_index1,
                         0,
                     );
@@ -93,7 +96,10 @@ impl SceneBVH {
                 }
                 (None, Some(left_bb1)) => {
                     trees[tree_index].set_tree_children(
-                        AABB::new(Vector3::new(f32::MAX,f32::MAX,f32::MAX), Vector3::new(f32::MAX,f32::MAX,f32::MAX)),
+                        AABB::new(
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                        ),
                         left_index0,
                         left_bb1.clone(),
                         left_index1,
@@ -127,7 +133,10 @@ impl SceneBVH {
                     trees[tree_index].set_tree_children(
                         right_bb0.clone(),
                         right_index0,
-                        AABB::new(Vector3::new(f32::MAX,f32::MAX,f32::MAX), Vector3::new(f32::MAX,f32::MAX,f32::MAX)),
+                        AABB::new(
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                        ),
                         right_index1,
                         2,
                     );
@@ -135,7 +144,10 @@ impl SceneBVH {
                 }
                 (None, Some(right_bb1)) => {
                     trees[tree_index].set_tree_children(
-                        AABB::new(Vector3::new(f32::MAX,f32::MAX,f32::MAX), Vector3::new(f32::MAX,f32::MAX,f32::MAX)),
+                        AABB::new(
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                            Vector3::new(f32::MAX, f32::MAX, f32::MAX),
+                        ),
                         right_index0,
                         right_bb1.clone(),
                         right_index1,

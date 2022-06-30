@@ -1,7 +1,6 @@
-use crate::ray::Ray;
-use crate::utilities::math::Axis;
 use crate::utilities::math::fmax;
 use crate::utilities::math::fmin;
+use crate::utilities::math::Axis;
 use crate::Vector3;
 
 #[derive(Clone)]
@@ -15,7 +14,7 @@ impl AABB {
     pub fn new(minimum: Vector3<f32>, maximum: Vector3<f32>) -> Self {
         Self { minimum, maximum }
     }
-    pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> bool {
+    /* pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> bool {
         let inv_d = Vector3::new(
             1.0 / r.direction.x,
             1.0 / r.direction.y,
@@ -28,7 +27,7 @@ impl AABB {
         let hit_max = fmin(t_max, t0.max(t1).min_axis());
 
         hit_max > hit_min
-    }
+    }*/
 
     pub fn centroid2(&self, axis: Axis) -> f32 {
         self.minimum.get_axis(axis) + self.maximum.get_axis(axis)

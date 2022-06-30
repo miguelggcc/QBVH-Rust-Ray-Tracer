@@ -1,3 +1,5 @@
+use std::mem;
+
 use crate::{
     aabb::AABB,
     material::Material,
@@ -107,7 +109,19 @@ impl Hittable for Triangle {
     }
 }
 
-pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, rotation_angle: f32, axis: u8, material: Material) -> Vec<Object> {
+pub struct TriangleMesh{
+    pub triangles: Vec<Object>,
+}
+
+impl TriangleMesh{
+pub fn load(
+    filename: &str,
+    scale: f32,
+    offset: Vector3<f32>,
+    rotation_angle: f32,
+    axis: u8,
+    material: Material,
+) -> TriangleMesh {
     let object = tobj::load_obj(
         filename,
         &tobj::LoadOptions {
@@ -153,18 +167,16 @@ pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, rotation_angle: f3
                 mesh.positions[3 * ind2 + 2].into(),
             );
 
-            let p0 = p0.rotate(axis,cos,sin);
+            let p0 = p0.rotate(axis, cos, sin);
             let p1 = p1.rotate(axis, cos, sin);
             let p2 = p2.rotate(axis, cos, sin);
-            
+
             let a = p1 - p0;
             let b = p2 - p0;
             let normal = Vector3::cross(a, b).norm();
             v_normal[ind0] += normal;
             v_normal[ind1] += normal;
             v_normal[ind2] += normal;
-
-
 
             triangles.push(Object::get_triangles_vertices(
                 p0 * scale + offset,
@@ -185,5 +197,27 @@ pub fn load(filename: &str, scale: f32, offset: Vector3<f32>, rotation_angle: f3
         }
     }
 
-    triangles
+    Self{triangles}
+}
+
+#[allow(dead_code)]
+pub fn rotate_y(mut self, angle: f32) -> TriangleMesh {
+    self.triangles
+        .iter_mut()
+        .for_each(|face| *face = face.clone().rotate_y(angle));
+    self
+}
+
+#[allow(dead_code)]
+pub fn translate(mut self, offset: Vector3<f32>) -> TriangleMesh {
+    self.triangles
+        .iter_mut()
+        .for_each(|face| *face = face.clone().translate(offset));
+    self
+}
+
+pub fn push_to_objects(&mut self, objects: &mut Vec<Object>) {
+    objects.extend(mem::take(&mut self.triangles));
+}
+
 }
