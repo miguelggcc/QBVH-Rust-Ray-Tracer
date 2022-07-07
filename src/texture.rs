@@ -6,7 +6,7 @@ use num::clamp;
 use crate::utilities::vector3::Vector3;
 
 #[allow(dead_code)]
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum Texture {
     SolidColor {
         albedo: Vector3<f32>,
@@ -80,17 +80,10 @@ impl Texture {
                 let u = clamp(u, 0.0, 1.0);
                 let v = 1.0 - clamp(v, 0.0, 1.0);
 
-                let mut i = (u * width) as usize;
-                let mut j = (v * height) as usize;
                 let w = *width as usize;
                 let h = *height as usize;
-
-                if i >= w {
-                    i = w - 1
-                }
-                if j >= h {
-                    j = h - 1
-                }
+                let i = ((u * width) as usize).min(w - 1);
+                let j = ((v * height) as usize).min(h - 1);
 
                 let pixel = image_v[(i + j * w)];
                 Vector3::new(pixel[0] as f32, pixel[1] as f32, pixel[2] as f32)

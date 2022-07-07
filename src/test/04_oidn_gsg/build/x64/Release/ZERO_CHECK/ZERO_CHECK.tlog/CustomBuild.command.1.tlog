@@ -1,0 +1,10 @@
+^C:\USERS\MIGUE\DOCUMENTS\RUST\RAYTRACER\SRC\TEST\04_OIDN_GSG\BUILD\CMAKEFILES\E9779C5BA66B5E3BE4F458C84C1E893D\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg -BC:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/OIDN_GSG.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

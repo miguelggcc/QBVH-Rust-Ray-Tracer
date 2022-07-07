@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\migue\Documents\rust\raytracer\src\test\04_oidn_gsg\build\CMakeFiles\e9779c5ba66b5e3be4f458c84c1e893d\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{496181A5-7AC3-3FDF-B254-990E591CB391}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

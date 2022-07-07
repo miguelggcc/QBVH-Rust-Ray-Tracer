@@ -1,8 +1,12 @@
+use std::sync::Arc;
+
+use image::Rgb;
 //use enum_dispatch::enum_dispatch;
 use rand::prelude::ThreadRng;
 
 use crate::{
     aabb::AABB,
+    background::EnviromentalMap,
     constant_medium::ConstantMedium,
     material::Material,
     ray::{HitRecord, Ray},
@@ -23,6 +27,7 @@ pub enum Object {
     Translate(Translate),
     RotateY(RotateY),
     Triangle(Triangle),
+    EnviromentalMap(EnviromentalMap),
 }
 #[allow(dead_code)]
 impl Object {
@@ -69,6 +74,9 @@ impl Object {
     pub fn build_constant_medium(self, d: f32, color: Vector3<f32>) -> Self {
         Object::ConstantMedium(ConstantMedium::new(self, d, color))
     }
+    pub fn build_env_map(image_v: Arc<Vec<Rgb<f32>>>, width: f32, height: f32) -> Self {
+        Object::EnviromentalMap(EnviromentalMap::new(image_v, width, height))
+    }
     pub fn translate(self, offset: Vector3<f32>) -> Self {
         Object::Translate(Translate::new(self, offset))
     }
@@ -99,6 +107,7 @@ impl Object {
             Self::XZRect(rectangle) => rectangle.pdf_value(o, direction),
             Self::Sphere(sphere) => sphere.pdf_value(o, direction),
             Self::XYRect(rectangle) => rectangle.pdf_value(o, direction),
+            Self::EnviromentalMap(env_map) => env_map.pdf_value(o, direction),
             _ => 1.0,
         }
     }
@@ -107,6 +116,7 @@ impl Object {
             Self::XZRect(rectangle) => rectangle.random(o, rng),
             Self::Sphere(sphere) => sphere.random(o, rng),
             Self::XYRect(rectangle) => rectangle.random(o, rng),
+            Self::EnviromentalMap(env_map) => env_map.random(o, rng),
             _ => Vector3::new(1.0, 1.0, 1.0),
         }
     }
@@ -131,6 +141,7 @@ impl Hittable for Object {
             Object::Translate(translate) => translate.hit(r, t_min, t_max),
             Object::RotateY(rotate_y) => rotate_y.hit(r, t_min, t_max),
             Object::Triangle(triangle) => triangle.hit(r, t_min, t_max),
+            _ => unreachable!(),
         }
     }
 
@@ -144,6 +155,7 @@ impl Hittable for Object {
             Object::Translate(translate) => translate.bounding_box(),
             Object::RotateY(rotate_y) => rotate_y.bounding_box(),
             Object::Triangle(triangle) => triangle.bounding_box(),
+            _ => unreachable!(),
         }
     }
 }

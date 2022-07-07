@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::pdf::{PDFCosine, PDFSphere, PDFBlinnPhongSpec};
+use crate::pdf::{PDFBlinnPhongSpec, PDFCosine, PDFSphere};
 use rand::{prelude::ThreadRng, Rng};
 
 use crate::{
@@ -37,7 +37,7 @@ pub enum Material {
     },
     BlinnPhong {
         color: Vector3<f32>,
-        m_specular: f32,
+        k_specular: f32,
         exponent: f32,
     },
     Blend {
@@ -129,23 +129,21 @@ impl Material {
             }
             Material::BlinnPhong {
                 color,
-                m_specular,
+                k_specular,
                 exponent,
             } => {
-
                 let pdf_diffuse = PDFType::PDFCosine {
                     pdf: PDFCosine::new(hit.normal),
                 };
                 let pdf_specular = PDFType::PDFBlinnPhongSpec {
-                    pdf: PDFBlinnPhongSpec::new(r_in.direction, hit.normal,*exponent)
+                    pdf: PDFBlinnPhongSpec::new(r_in.direction, hit.normal, *exponent),
                 };
-                    Some(ScatterRecord::SpecularDiffuse {
-                        pdf_diffuse,
-                        pdf_specular,
-                        m_specular: *m_specular,
-                        attenuation: *color,
-                    })
-                
+                Some(ScatterRecord::SpecularDiffuse {
+                    pdf_diffuse,
+                    pdf_specular,
+                    k_specular: *k_specular,
+                    attenuation: *color,
+                })
             }
             Material::Blend {
                 material1,
@@ -202,20 +200,21 @@ impl Material {
         }
     }*/
 
-    pub fn emit(&self, hit: &HitRecord) -> Vector3<f32> {
+    #[inline(always)]
+    pub fn emit(&self, u: f32, v: f32, p: Vector3<f32>, front_face: bool) -> Vector3<f32> {
         match self {
             Material::DiffuseLight { texture } => {
-                if hit.front_face {
-                    texture.value(hit.u, hit.v, hit.p)
+                if front_face {
+                    texture.value(u, v, p)
                 } else {
                     Vector3::new(0.0, 0.0, 0.0)
                 }
             }
-            Material::Hdri { texture } => texture.value(hit.u, hit.v, hit.p),
+            Material::Hdri { texture } => texture.value(u, v, p),
             _ => Vector3::new(0.0, 0.0, 0.0),
         }
     }
-
+    #[inline(always)]
     pub fn textured(&self) -> bool {
         matches!(
             self,
@@ -253,10 +252,10 @@ pub enum ScatterRecord<'a> {
         pdf: PDFType<'a>,
         attenuation: Vector3<f32>,
     },
-    SpecularDiffuse{
+    SpecularDiffuse {
         pdf_specular: PDFType<'a>,
         pdf_diffuse: PDFType<'a>,
-        m_specular: f32,
+        k_specular: f32,
         attenuation: Vector3<f32>,
-    }
+    },
 }

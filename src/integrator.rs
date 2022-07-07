@@ -1,3 +1,4 @@
+use crate::background::Background;
 use crate::camera::Camera;
 use crate::material::ScatterRecord;
 use crate::object::Object;
@@ -14,7 +15,7 @@ use rand::{prelude::ThreadRng, Rng};
 
 pub struct World {
     pub camera: Camera,
-    pub background: Vector3<f32>,
+    pub background: Background,
     pub bvh: SceneBVH,
     pub light: Vec<Object>,
     pub aa: i32,
@@ -44,56 +45,40 @@ impl World {
         pb.set_style(ProgressStyle::default_bar().template("{bar:40.green/white}  {percent} %"));
         pb.set_draw_delta(n / 100);
 
-        /*let light = [
-            Object::build_xz_rect(-0.5, 0.5, -0.5, 0.5, 1.0, Material::default(), true),
-            Object::build_sphere(
-                Vector3::new(-0.05, 0.07, -1.0 + 0.07),
-                0.07,
-                Material::default(),
-            ),
-        ];*/
-
-        /*let light = [Object::build_xz_rect(
-            213.0, 343.0, 227.0, 332.0, 554.0, Material::default(), true,
-        ),Object::build_sphere(
-            Vector3::new(190.0, 90.0, 190.0),
-            90.0,
-            Material::Dielectric {
-                index_of_refraction: 1.5,
-            })];*/
-
-       /*let light = [Object::build_xz_rect(
-            213.0, 343.0, -262.0, -157.0, 554.0, Material::default(), true,
-        )];*/
         let x_strata = (self.aa as f32).sqrt().floor() as usize;
-let  y_strata = (self.aa as f32/x_strata as f32).floor() as usize;
+        let y_strata = (self.aa as f32 / x_strata as f32).floor() as usize;
 
-      
-frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
+        frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
             let mut rng = rand::thread_rng();
 
             let mut pixel_color = Vector3::new(0.0, 0.0, 0.0);
             let x = (i % self.width as usize) as f32;
             let y = (i / self.width as usize) as f32;
 
-            for i_strata in 0..x_strata{
-                for j_strata in 0..y_strata{  
-            
-                let u = (x + (i_strata as f32 + rng.gen::<f32>())/x_strata as f32) / (self.width - 1.0);
-                let v = 1.0 - (y +(j_strata as f32 + rng.gen::<f32>())/y_strata as f32) / (self.height - 1.0);
+            for i_strata in 0..x_strata {
+                for j_strata in 0..y_strata {
+                    let u = (x + (i_strata as f32 + rng.gen::<f32>()) / x_strata as f32)
+                        / (self.width - 1.0);
+                    let v = 1.0
+                        - (y + (j_strata as f32 + rng.gen::<f32>()) / y_strata as f32)
+                            / (self.height - 1.0);
 
-                let r = self.camera.get_ray(u, v, &mut rng);
-                pixel_color += ray_color(
-                    &self.bvh,
-                    r,
-                    self.depth,
-                    self.background,
-                    &self.light,
-                    &mut rng,
-                );
+                    let r = self.camera.get_ray(u, v, &mut rng);
+                    pixel_color += ray_color(
+                        &self.bvh,
+                        r,
+                        self.depth,
+                        &self.background,
+                        &self.light,
+                        &mut rng,
+                    );
+                }
             }
-        }
-            pixel.copy_from_slice(&get_color(&mut pixel_color, (x_strata*y_strata) as f32,self.camera.exposure));
+            pixel.copy_from_slice(&get_color(
+                &mut pixel_color,
+                (x_strata * y_strata) as f32,
+                self.camera.exposure,
+            ));
             pb.inc(1);
         });
         pb.finish_and_clear();
@@ -105,12 +90,12 @@ fn ray_color(
     bvh: &SceneBVH,
     r: Ray,
     depth_t: i32,
-    background: Vector3<f32>,
+    background: &Background,
     light: &[Object],
     rng: &mut ThreadRng,
 ) -> Vector3<f32> {
     let mut color = Vector3::new(1.0, 1.0, 1.0);
-    let chance = if light.is_empty(){0.0} else{0.5};
+    let chance = if light.is_empty() { 0.0 } else { 0.5 };
 
     let mut scatter_ray = r;
     for _depth in 0..depth_t {
@@ -130,35 +115,57 @@ fn ray_color(
                             pdf: PDF::new(hit.p, light),
                         };
                         let mixture = PDFMixture::new(&pdf_lights, &pdf);
-                        let scattered = Ray::new(hit.p, mixture.generate(chance ,rng));
-                        let pdf_val = mixture.value(chance ,scattered.direction);
-                        let pdf_multiplicator = pdf.value(scattered.direction)/pdf_val;
-                       
+                        let scattered = Ray::new(hit.p, mixture.sample(chance, rng));
+                        let pdf_val = mixture.value(chance, scattered.direction);
+
+                        let pdf_multiplicator = pdf.value(scattered.direction) / pdf_val;
+
+                        if pdf_multiplicator == pdf_multiplicator {
                             color = color * attenuation * pdf_multiplicator;
+                        }
 
                         scatter_ray = scattered;
 
                         continue;
                     }
-                    ScatterRecord::SpecularDiffuse { pdf_specular, pdf_diffuse, m_specular, attenuation } => {
+                    ScatterRecord::SpecularDiffuse {
+                        pdf_specular,
+                        pdf_diffuse,
+                        k_specular,
+                        attenuation,
+                    } => {
                         let pdf_lights = PDFType::PDFObj {
                             pdf: PDF::new(hit.p, light),
                         };
                         let mixture_diffuse = PDFMixture::new(&pdf_lights, &pdf_diffuse);
                         let mixture_specular = PDFMixture::new(&pdf_lights, &pdf_specular);
 
-                        let is_specular = rng.gen::<f32>() < m_specular;
+                        let is_specular = rng.gen::<f32>() < k_specular;
 
-                        let scattered = if is_specular{
-                         Ray::new(hit.p, mixture_specular.generate(chance ,rng))
+                        let scattered = if is_specular {
+                            Ray::new(hit.p, mixture_specular.sample(chance, rng))
                         } else {
-                            Ray::new(hit.p, mixture_diffuse.generate(chance ,rng))
-                         };
-                        let pdf_val = mixture_diffuse.value(chance ,scattered.direction)*(1.0-m_specular) + mixture_specular.value(chance ,scattered.direction)*m_specular;
-                        let pdf_multiplicator_diffuse = pdf_diffuse.value(scattered.direction)/pdf_val;
-                        let pdf_multiplicator_specular = pdf_specular.value(scattered.direction)/pdf_val;
-   
-                            color = color * (attenuation * pdf_multiplicator_diffuse* (1.0-m_specular) + Vector3::new(1.0,1.0,1.0)*pdf_multiplicator_specular * m_specular);
+                            Ray::new(hit.p, mixture_diffuse.sample(chance, rng))
+                        };
+
+                        let pdf_val = mixture_diffuse.value(chance, scattered.direction)
+                            * (1.0 - k_specular)
+                            + mixture_specular.value(chance, scattered.direction) * k_specular;
+
+                        let pdf_multiplicator_diffuse =
+                            pdf_diffuse.value(scattered.direction) / pdf_val;
+                        let pdf_multiplicator_specular =
+                            pdf_specular.value(scattered.direction) / pdf_val;
+
+                        if pdf_multiplicator_diffuse == pdf_multiplicator_diffuse
+                            && pdf_multiplicator_specular == pdf_multiplicator_specular
+                        {
+                            color = color
+                                * (attenuation * pdf_multiplicator_diffuse * (1.0 - k_specular)
+                                    + Vector3::new(1.0, 1.0, 1.0)
+                                        * pdf_multiplicator_specular
+                                        * k_specular);
+                        }
 
                         scatter_ray = scattered;
 
@@ -166,7 +173,7 @@ fn ray_color(
                     }
                 }
             } else {
-                let emitted = hit.material.emit(&hit);
+                let emitted = hit.material.emit(hit.u, hit.v, hit.p, hit.front_face);
                 return color * emitted;
             }
         }
@@ -174,25 +181,28 @@ fn ray_color(
         /*  let unit_direction = scatter_ray.direction.norm();
         let t = 0.5 * (unit_direction.y + 1.0);
         return color * (Vector3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vector3::new(0.5, 0.7, 1.0) * t);*/
-        return color * background;
+        return color * background.value(&scatter_ray);
     }
     Vector3::new(0.0, 0.0, 0.0)
 }
 
+
+#[inline(always)]
 fn get_color(color: &mut Vector3<f32>, samples_per_pixel: f32, exposure: f32) -> [u8; 4] {
     let mut r = color.x / samples_per_pixel;
     let mut g = color.y / samples_per_pixel;
     let mut b = color.z / samples_per_pixel;
 
     // change exposition
-    let exp = 1.0;
+    let exp = 100000.0;
     r = r * (1.0 + r / exp) / (1.0 + r);
     g = g * (1.0 + g / exp) / (1.0 + g);
     b = b * (1.0 + b / exp) / (1.0 + b);
     *color = Vector3::new(r.powf(0.45), g.powf(0.45), b.powf(0.45)); //fast gamma correction
     color.to_rgbau8()
 }
-    /* //algorithm created by John Hable for Uncharted 2
+/*
+//algorithm created by John Hable for Uncharted 2
      *color*=exposure;
    let mut r  = color.x / samples_per_pixel;
    let mut g = color.y / samples_per_pixel;

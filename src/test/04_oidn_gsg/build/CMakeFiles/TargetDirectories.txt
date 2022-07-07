@@ -1,0 +1,8 @@
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/CMakeFiles/oidnDenoise.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/CMakeFiles/INSTALL.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/src/common/CMakeFiles/common.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/src/common/CMakeFiles/INSTALL.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/src/apps/utils/CMakeFiles/utils.dir
+C:/Users/migue/Documents/rust/raytracer/src/test/04_oidn_gsg/build/src/apps/utils/CMakeFiles/INSTALL.dir

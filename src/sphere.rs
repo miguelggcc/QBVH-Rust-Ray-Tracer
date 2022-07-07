@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use rand::{prelude::ThreadRng, Rng};
 
 use crate::{
@@ -26,13 +28,12 @@ impl Sphere {
         }
     }
 
-    pub fn get_sphere_uv(p: Vector3<f32>) -> (f32, f32) {
-        let pi = std::f32::consts::PI;
+    pub fn get_sphere_uv(p: &Vector3<f32>) -> (f32, f32) {
         let theta = (-p.y).acos();
-        let phi = (-p.z).atan2(p.x) + pi;
+        let phi = (-p.z).atan2(p.x) + PI;
 
-        let u = phi / (2.0 * pi);
-        let v = theta / pi;
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
         (u, v)
     }
 
@@ -40,7 +41,7 @@ impl Sphere {
         if let Some(_hit) = self.hit(&Ray::new(origin, v), 0.001, f32::MAX) {
             let cos_theta_max =
                 (1.0 - self.radius * self.radius / (self.center - origin).magnitude2()).sqrt();
-            let solid_angle = 2.0 * std::f32::consts::PI * (1.0 - cos_theta_max);
+            let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
             return 1.0 / solid_angle;
         }
         0.0
@@ -85,7 +86,7 @@ impl Hittable for Sphere {
             }
             let outward_normal = (r.at(root) - self.center) / self.radius;
             let (u, v) = if self.material.textured() {
-                Self::get_sphere_uv(outward_normal)
+                Self::get_sphere_uv(&outward_normal)
             } else {
                 (0.0, 0.0)
             };

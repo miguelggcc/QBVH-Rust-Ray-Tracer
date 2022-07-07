@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\migue\Documents\rust\raytracer\src\test\04_oidn_gsg\src\apps\utils\image_io.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\migue\Documents\rust\raytracer\src\test\04_oidn_gsg\src\apps\utils\image_io.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\migue\Documents\rust\raytracer\src\test\04_oidn_gsg\src\apps\utils\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{197B8F4F-49CE-386A-B990-B63057D667D5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{FE6D61EA-7A04-300E-B692-36A1143B719F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -146,9 +146,7 @@ impl Vector3<f32> {
             255,
         ]
     }
-    pub fn luminance(self)->f32{
-        0.2126*self.x +0.7152*self.y+ 0.0722*self.z
-    }
+
     #[inline(always)]
     pub fn random_vec(min: f32, max: f32, rng: &mut ThreadRng) -> Self {
         Self::new(
