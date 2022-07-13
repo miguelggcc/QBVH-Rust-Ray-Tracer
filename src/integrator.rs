@@ -153,7 +153,7 @@ fn ray_color(
                         let pdf_multiplicator_diffuse =
                             (pdf_diffuse.value(scattered.direction)) / pdf_val;
                         let pdf_multiplicator_specular =
-                            0.6*(pdf_specular.value(scattered.direction)) / pdf_val;
+                            (pdf_specular.value(scattered.direction)) / pdf_val;
 
                         if pdf_multiplicator_diffuse == pdf_multiplicator_diffuse
                             && pdf_multiplicator_specular == pdf_multiplicator_specular
