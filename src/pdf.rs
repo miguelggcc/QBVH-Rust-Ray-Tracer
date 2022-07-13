@@ -40,7 +40,7 @@ impl PDFType<'_> {
                 let cosine_specular = fmax(Vector3::dot(random_normal, pdf.normal), 0.0);
 
                 let normal_pdf =
-                    (pdf.exponent + 1.0) / (2.0 * PI) * cosine_specular.powf(pdf.exponent);
+                    (pdf.exponent + 2.0) / (2.0 * PI) * cosine_specular.powf(pdf.exponent + 1.0);
 
                 normal_pdf / (4.0 * Vector3::dot(pdf.r_in_direction.norm() * (-1.0), random_normal))
             }

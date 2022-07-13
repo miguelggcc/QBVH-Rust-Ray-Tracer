@@ -3,7 +3,7 @@ use std::{
     io::{self, BufRead},
     path::Path,
 };
-
+#[allow(dead_code)]
 pub fn sample_image(filename: &str) -> Vec<u8> {
     let path = Path::new("HDRIs/shanghai.png");
     let image = image::open(path)

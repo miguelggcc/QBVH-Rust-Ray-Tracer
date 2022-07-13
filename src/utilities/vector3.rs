@@ -28,6 +28,11 @@ where
         [self.x, self.y, self.z]
     }
     #[inline(always)]
+    pub fn from_array(array: &[T]) -> Self {
+        assert!(array.len() == 3);
+        Self::new(array[0], array[1], array[2])
+    }
+    #[inline(always)]
     pub fn multiply_scalar(&mut self, scalar: T) {
         self.x *= scalar;
         self.y *= scalar;
@@ -154,6 +159,10 @@ impl Vector3<f32> {
             rng.gen_range(min..max),
             rng.gen_range(min..max),
         )
+    }
+    #[inline(always)]
+    pub fn luminance(&self) -> f32 {
+        0.2126 * self.x + 0.7152 * self.y + 0.0722 * self.z
     }
     #[inline(always)]
     pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Self {

@@ -48,17 +48,18 @@ pub fn load_hdri(path: &str, angle: f32) -> (Object, Texture) {
         let j = index / width;
         let i = (index + shift) % width;
         j * width + i
-      }
+    }
 
-    fn offset_image(image: &Vec<Rgb<f32>>, shift: usize, width: usize)->Vec<Rgb<f32>>{
+    fn offset_image(image: &Vec<Rgb<f32>>, shift: usize, width: usize) -> Vec<Rgb<f32>> {
         let mut offset_image = image.clone();
-        offset_image.iter_mut().enumerate().for_each(|(index, pixel)|{
-            *pixel = image[shift_index(index,shift, width)]
-        });
+        offset_image
+            .iter_mut()
+            .enumerate()
+            .for_each(|(index, pixel)| *pixel = image[shift_index(index, shift, width)]);
         offset_image
     }
 
-   /* fn image_copy(
+    /* fn image_copy(
         dst: &mut Vec<Rgb<f32>>,
         copy_x: usize,
         copy_y: usize,

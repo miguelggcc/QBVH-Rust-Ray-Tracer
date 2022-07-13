@@ -279,7 +279,7 @@ impl Scenes {
 
             Self::HDRISun => {
                 let (env_map, hdri) = load_hdri("HDRIs/sun.hdr", 120.0);
-    
+
                 let look_from = Vector3::new(-6.0, 1.0, 0.0);
                 let look_at = Vector3::new(0.0, 0.0, 0.0);
                 let vup = Vector3::new(0.0, 1.0, 0.0);
@@ -325,7 +325,7 @@ impl Scenes {
                 let mut bunny = TriangleMesh::load(
                     "objs/stanford-bunny.obj",
                     13.0,
-                    Vector3::new(0.0,-1.42, -1.3 ),
+                    Vector3::new(0.0, -1.42, -1.3),
                     -70.0,
                     1,
                     Material::BlinnPhong {
@@ -345,13 +345,19 @@ impl Scenes {
                             exponent: 150.0,
                         },
                     ),*/
-                    Object::build_sphere(Vector3::new(0.0, 0.0, 0.98), 0.98, Material::Metal { albedo: Vector3::new(0.542,0.497,0.449), fuzz: 0.0 } ),
+                    Object::build_sphere(
+                        Vector3::new(0.0, 0.0, 0.98),
+                        0.98,
+                        Material::Metal {
+                            albedo: Vector3::new(0.542, 0.497, 0.449),
+                            fuzz: 0.0,
+                        },
+                    ),
                     Object::build_xz_rect(-5.0, 5.0, -5.0, 5.0, -0.98, material_ground, false),
                 ];
 
                 teapot.push_to_objects(&mut objects);
                 bunny.push_to_objects(&mut objects);
-
 
                 SceneConfig::new(objects, camera, vec![env_map], Background::new_hdri(hdri))
             }
@@ -488,7 +494,7 @@ impl Scenes {
 
                 let difflight = Material::DiffuseLight {
                     texture: Texture::SolidColor {
-                        albedo: Vector3::new(15.0, 15.0, 15.0),
+                        albedo: Vector3::new(25.0, 25.0, 25.0),
                     },
                 };
 
@@ -561,7 +567,6 @@ impl Scenes {
 
                 let (env_map, hdri) = load_hdri("HDRIs/sun.hdr", -15.0);
 
-
                 SceneConfig::new(
                     objects,
                     camera,
@@ -571,10 +576,10 @@ impl Scenes {
                             Vector3::new(190.0, 90.0, 190.0),
                             90.0,
                             Material::default(),
-                        ), env_map
+                        ),
                     ],
-                    //Background::new_plain(Vector3::new(0.0, 0.0, 0.0)),
-                    Background::new_hdri(hdri)
+                    Background::new_plain(Vector3::new(0.0, 0.0, 0.0)),
+                    // Background::new_hdri(hdri)
                 )
             }
             Scenes::Volumes => {
@@ -739,7 +744,7 @@ impl Scenes {
                     width / height,
                     aperture,
                     dist_to_focus,
-                    2.8,
+                    1.0,
                 );
 
                 let red = Material::Lambertian {
@@ -759,10 +764,30 @@ impl Scenes {
                 };
 
                 let mut objects = vec![Object::build_yz_rect(
-                    0.0, 355.0, 0.0, 555.0, 755.0, green, false,
+                    0.0,
+                    355.0,
+                    -400.0,
+                    755.0,
+                    755.0,
+                    Material::BlinnPhong {
+                        color: Vector3::new(0.12, 0.45, 0.15),
+                        k_specular: 0.1,
+                        exponent: 1500.0,
+                    },
+                    false,
                 )];
                 objects.push(Object::build_yz_rect(
-                    0.0, 355.0, -400.0, 555.0, 0.0, red, false,
+                    0.0,
+                    355.0,
+                    -400.0,
+                    755.0,
+                    0.0,
+                    Material::BlinnPhong {
+                        color: Vector3::new(0.65, 0.05, 0.05),
+                        k_specular: 0.1,
+                        exponent: 1500.0,
+                    },
+                    false,
                 ));
                 objects.push(Object::build_xz_rect(
                     107.5, 647.5, 127.0, 372.0, 354.9, difflight, true,
@@ -773,7 +798,11 @@ impl Scenes {
                     -400.0,
                     555.0,
                     0.0,
-                    white.clone(),
+                    Material::BlinnPhong {
+                        color: Vector3::new(0.73, 0.73, 0.73),
+                        k_specular: 0.1,
+                        exponent: 1500.0,
+                    },
                     false,
                 ));
                 objects.push(Object::build_xz_rect(
@@ -782,7 +811,11 @@ impl Scenes {
                     -400.0,
                     555.0,
                     355.0,
-                    white.clone(),
+                    Material::BlinnPhong {
+                        color: Vector3::new(0.73, 0.73, 0.73),
+                        k_specular: 0.1,
+                        exponent: 1500.0,
+                    },
                     false,
                 ));
                 objects.push(Object::build_xy_rect(
@@ -791,11 +824,15 @@ impl Scenes {
                     0.0,
                     355.0,
                     555.0,
-                    white.clone(),
+                    Material::BlinnPhong {
+                        color: Vector3::new(0.73, 0.73, 0.73),
+                        k_specular: 0.1,
+                        exponent: 1500.0,
+                    },
                     false,
                 ));
                 let aluminum = Material::Metal {
-                    albedo: Vector3::new(0.8, 0.85, 0.88),
+                    albedo: Vector3::new(0.7, 0.78, 0.85),
                     fuzz: 0.0,
                 };
 
@@ -1026,8 +1063,6 @@ impl Scenes {
 
                 objects.push(sphere);
 
-
-
                 SceneConfig::new(
                     objects,
                     camera,
@@ -1039,7 +1074,7 @@ impl Scenes {
                         554.0,
                         Material::default(),
                         true,
-                    ), ],
+                    )],
                     Background::new_plain(Vector3::new(0.0, 0.0, 0.0)),
                 )
             } /*Self::Macintosh => {

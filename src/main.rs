@@ -4,6 +4,7 @@ mod aabb;
 mod background;
 mod camera;
 mod constant_medium;
+mod imaging;
 mod integrator;
 mod material;
 mod object;
@@ -29,7 +30,11 @@ const DEPTH: i32 = 50;
 
 //use show_image::{event, ImageInfo, ImageView, WindowOptions};
 
-use crate::{utilities::draw_sample::sample_image, integrator::World, scenes::Scenes};
+use crate::{
+    imaging::{bloom, tone_map},
+    integrator::World,
+    scenes::Scenes,
+};
 
 #[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -60,9 +65,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .possible_values(["480", "720", "1080"])
                 .default_value("480")
                 .validator(|a| a.parse::<u32>()),
-                arg!(-d --denoising <oidn>)
+            arg!(-d --denoising <oidn>)
                 .help("Intel OpenI mage Denoising")
-                .takes_value(false)
+                .required(false)
+                .takes_value(false),
         ])
         .get_matches();
 
@@ -95,8 +101,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .value_of_t("AA")
         .expect("'AA' is required and drawing will fail if its missing");
 
-    let denoising = commands.is_present("denoising");
-    let mut pixel_data = vec![0; width as usize * height as usize * 4];
+    let do_denoising = commands.is_present("denoising");
+    let mut pixel_data = vec![0.0; (width * height) as usize * 3];
+    //let mut denoise_data = pixel_data.clone();
+    let mut output_data = vec![0; (width * height) as usize * 4];
+    let mut output_data_no_blur = output_data.clone();
 
     let start = Instant::now();
     let world = World::new(scene, width as f32, height as f32, aa, DEPTH);
@@ -108,18 +117,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start.elapsed();
     println!("Time elapsed rendering: {:?}", duration);
 
-    let sample_image = sample_image("uvs.txt");
-
+    tone_map(&mut pixel_data, &mut output_data_no_blur);
     image::save_buffer(
         "image.png",
-        &sample_image,
-        4096,
-        2048,
+        &output_data_no_blur,
+        width,
+        height,
         image::ColorType::Rgba8,
     )
     .unwrap();
 
-    let image = ImageView::new(ImageInfo::rgba8(width, height), &pixel_data);
+    bloom(&mut pixel_data, width, height);
+
+    tone_map(&mut pixel_data, &mut output_data);
+
+    let image = if do_denoising {
+        /*let start = Instant::now();
+        to_rgba(&mut denoise_data,&mut output_denoise);
+         denoise(&mut pixel_data,&mut  denoise_data, width as usize, height as usize);
+        let duration = start.elapsed();
+        println!("Time elapsed denoising: {:?}", duration);*/
+
+        //ImageView::new(ImageInfo::rgba8(width, height), &output_denoise)
+        ImageView::new(ImageInfo::rgba8(width, height), &output_data)
+    } else {
+        ImageView::new(ImageInfo::rgba8(width, height), &output_data)
+    };
 
     // Create a window with default options and display the image.
     let window = show_image::create_window(

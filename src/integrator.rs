@@ -4,6 +4,7 @@ use crate::material::ScatterRecord;
 use crate::object::Object;
 use crate::pdf::{PDFMixture, PDFType, PDF};
 use crate::scenes::Scenes;
+use crate::utilities::math::fmax;
 use crate::utilities::vector3::Vector3;
 use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
@@ -39,7 +40,7 @@ impl World {
         }
     }
 
-    pub fn draw(&self, frame: &mut [u8]) {
+    pub fn draw(&self, frame: &mut [f32]) {
         let n = (self.width * self.height) as u64;
         let pb = ProgressBar::new(n);
         pb.set_style(ProgressStyle::default_bar().template("{bar:40.green/white}  {percent} %"));
@@ -48,7 +49,7 @@ impl World {
         let x_strata = (self.aa as f32).sqrt().floor() as usize;
         let y_strata = (self.aa as f32 / x_strata as f32).floor() as usize;
 
-        frame.par_chunks_mut(4).enumerate().for_each(|(i, pixel)| {
+        frame.par_chunks_mut(3).enumerate().for_each(|(i, pixel)| {
             let mut rng = rand::thread_rng();
 
             let mut pixel_color = Vector3::new(0.0, 0.0, 0.0);
@@ -75,7 +76,7 @@ impl World {
                 }
             }
             pixel.copy_from_slice(&get_color(
-                &mut pixel_color,
+                pixel_color,
                 (x_strata * y_strata) as f32,
                 self.camera.exposure,
             ));
@@ -98,7 +99,7 @@ fn ray_color(
     let chance = if light.is_empty() { 0.0 } else { 0.5 };
 
     let mut scatter_ray = r;
-    for _depth in 0..depth_t {
+    for bounces in 0..depth_t {
         if let Some(hit) = bvh.hit(&scatter_ray, 0.001, f32::INFINITY) {
             if let Some(scatter) = hit.material.scatter(&scatter_ray, &hit, rng) {
                 match scatter {
@@ -108,7 +109,6 @@ fn ray_color(
                     } => {
                         color = color * attenuation;
                         scatter_ray = specular_ray;
-                        continue;
                     }
                     ScatterRecord::Scatter { pdf, attenuation } => {
                         let pdf_lights = PDFType::PDFObj {
@@ -125,8 +125,6 @@ fn ray_color(
                         }
 
                         scatter_ray = scattered;
-
-                        continue;
                     }
                     ScatterRecord::SpecularDiffuse {
                         pdf_specular,
@@ -153,9 +151,9 @@ fn ray_color(
                             + mixture_specular.value(chance, scattered.direction) * k_specular;
 
                         let pdf_multiplicator_diffuse =
-                            pdf_diffuse.value(scattered.direction) / pdf_val;
+                            (pdf_diffuse.value(scattered.direction)) / pdf_val;
                         let pdf_multiplicator_specular =
-                            pdf_specular.value(scattered.direction) / pdf_val;
+                            0.6*(pdf_specular.value(scattered.direction)) / pdf_val;
 
                         if pdf_multiplicator_diffuse == pdf_multiplicator_diffuse
                             && pdf_multiplicator_specular == pdf_multiplicator_specular
@@ -168,10 +166,21 @@ fn ray_color(
                         }
 
                         scatter_ray = scattered;
-
-                        continue;
                     }
                 }
+                
+                //Russian roulette
+                if bounces>5{
+                let q = fmax(0.03,1.0-color.luminance());
+                if rng.gen::<f32>() < q {
+                    break;
+                } else {
+                    color /= 1.0-q;
+                }
+            }
+            
+                continue;
+                
             } else {
                 let emitted = hit.material.emit(hit.u, hit.v, hit.p, hit.front_face);
                 return color * emitted;
@@ -186,20 +195,21 @@ fn ray_color(
     Vector3::new(0.0, 0.0, 0.0)
 }
 
-
 #[inline(always)]
-fn get_color(color: &mut Vector3<f32>, samples_per_pixel: f32, exposure: f32) -> [u8; 4] {
-    let mut r = color.x / samples_per_pixel;
-    let mut g = color.y / samples_per_pixel;
-    let mut b = color.z / samples_per_pixel;
+fn get_color(color: Vector3<f32>, samples_per_pixel: f32, exposure: f32) -> [f32; 3] {
+    /*let r = color.x / samples_per_pixel;
+    let g = color.y / samples_per_pixel;
+    let b = color.z / samples_per_pixel;*/
 
-    // change exposition
+    (color *exposure / samples_per_pixel).to_array()
+
+    /*// change exposition
     let exp = 100000.0;
     r = r * (1.0 + r / exp) / (1.0 + r);
     g = g * (1.0 + g / exp) / (1.0 + g);
     b = b * (1.0 + b / exp) / (1.0 + b);
     *color = Vector3::new(r.powf(0.45), g.powf(0.45), b.powf(0.45)); //fast gamma correction
-    color.to_rgbau8()
+    color.to_rgbau8()*/
 }
 /*
 //algorithm created by John Hable for Uncharted 2

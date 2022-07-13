@@ -156,6 +156,9 @@ impl Material {
                     material2.scatter(r_in, hit, rng)
                 }
             }
+            /*Material::FresnelBlend=>{
+
+            },*/
             _ => None,
         }
     }
