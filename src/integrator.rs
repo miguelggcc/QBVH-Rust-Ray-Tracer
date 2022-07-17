@@ -109,7 +109,7 @@ fn ray_color(
                     } => {
                         color = color * attenuation;
                         scatter_ray = specular_ray;
-                    }
+                    },
                     ScatterRecord::Scatter { pdf, attenuation } => {
                         let pdf_lights = PDFType::PDFObj {
                             pdf: PDF::new(hit.p, light),
@@ -125,52 +125,32 @@ fn ray_color(
                         }
 
                         scatter_ray = scattered;
-                    }
+                    },
                     ScatterRecord::SpecularDiffuse {
-                        pdf_specular,
-                        pdf_diffuse,
-                        k_specular,
+                        pdf,
                         attenuation,
                     } => {
                         let pdf_lights = PDFType::PDFObj {
                             pdf: PDF::new(hit.p, light),
                         };
-                        let mixture_diffuse = PDFMixture::new(&pdf_lights, &pdf_diffuse);
-                        let mixture_specular = PDFMixture::new(&pdf_lights, &pdf_specular);
+                        let mixture = PDFMixture::new(&pdf_lights, &pdf);
 
-                        let is_specular = rng.gen::<f32>() < k_specular;
 
-                        let scattered = if is_specular {
-                            Ray::new(hit.p, mixture_specular.sample(chance, rng))
-                        } else {
-                            Ray::new(hit.p, mixture_diffuse.sample(chance, rng))
-                        };
+                        let scattered = Ray::new(hit.p, mixture.sample(chance, rng));
 
-                        let pdf_val = mixture_diffuse.value(chance, scattered.direction)
-                            * (1.0 - k_specular)
-                            + mixture_specular.value(chance, scattered.direction) * k_specular;
-
-                        let pdf_multiplicator_diffuse =
-                            (pdf_diffuse.value(scattered.direction)) / pdf_val;
-                        let pdf_multiplicator_specular =
-                            (pdf_specular.value(scattered.direction)) / pdf_val;
-
-                        if pdf_multiplicator_diffuse == pdf_multiplicator_diffuse
-                            && pdf_multiplicator_specular == pdf_multiplicator_specular
-                        {
-                            color = color
-                                * (attenuation * pdf_multiplicator_diffuse * (1.0 - k_specular)
-                                    + Vector3::new(1.0, 1.0, 1.0)
-                                        * pdf_multiplicator_specular
-                                        * k_specular);
+                        let eval = hit.material.eval_brdf(&scatter_ray, &hit, attenuation, &scattered);
+                        let pdf_val = mixture.value(chance, scattered.direction);
+                        if eval==eval && pdf_val==pdf_val && pdf_val>0.0{
+                            color = color*eval/pdf_val;
                         }
+                        
 
                         scatter_ray = scattered;
                     }
                 }
                 
                 //Russian roulette
-                if bounces>5{
+                if bounces>6{
                 let q = fmax(0.03,1.0-color.luminance());
                 if rng.gen::<f32>() < q {
                     break;
@@ -201,7 +181,7 @@ fn get_color(color: Vector3<f32>, samples_per_pixel: f32, exposure: f32) -> [f32
     let g = color.y / samples_per_pixel;
     let b = color.z / samples_per_pixel;*/
 
-    (color *exposure / samples_per_pixel).to_array()
+    (color  / samples_per_pixel).to_array()
 
     /*// change exposition
     let exp = 100000.0;

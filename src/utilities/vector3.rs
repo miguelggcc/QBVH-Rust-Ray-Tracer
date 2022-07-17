@@ -5,7 +5,7 @@ use num::{Float, Num};
 use rand::{prelude::ThreadRng, Rng};
 use std::{
     borrow::Borrow,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign}, f32::consts::PI,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -220,6 +220,41 @@ impl Vector3<f32> {
         let x = phi.cos() * sin_theta;
         let y = phi.sin() * sin_theta;
         let z = r2;
+        Vector3::new(x, y, z)
+    }
+    #[inline(always)]
+    //The Ashikhmin and Shirley BRDF Model
+    pub fn random_as(nu: f32, nv: f32, rng: &mut ThreadRng) -> Self {
+        let r1 = rng.gen::<f32>();
+
+
+        let (r1_corr,correction) = if r1<0.25{
+            (1.0-4.0*(0.5-r1), 0)
+        } else if r1<0.5{
+            (1.0-4.0*(0.5-r1), 1)
+        }else if r1<0.75{
+            (1.0-4.0*(0.75-r1), 2)
+            } else{
+            (1.0-4.0*(1.0-r1), 3)
+        };
+
+        let phi = (((nu+1.0)/(nv+1.0)).sqrt()*(PI*r1_corr*0.5).tan()).atan();
+
+        let phi_corr = match correction{
+            0=> phi,
+            1=>PI-phi,
+            2=>PI+phi,
+            _=> 2.0*PI-phi
+        };
+
+        let r2 = rng.gen::<f32>();
+
+        let cos_theta = (1.0-r2).powf((nu*phi_corr.cos().powi(2)+nv*phi_corr.sin().powi(2)+1.0).recip());
+        let sin_theta = (1.0-cos_theta*cos_theta).sqrt();
+
+        let x = phi_corr.cos() * sin_theta;
+        let y = phi_corr.sin() * sin_theta;
+        let z = cos_theta;
         Vector3::new(x, y, z)
     }
     #[inline(always)]

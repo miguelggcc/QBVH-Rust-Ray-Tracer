@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::pdf::{PDFBlinnPhongSpec, PDFCosine, PDFSphere};
+use crate::{pdf::{PDFBlinnPhongSpec, PDFCosine, PDFSphere, PDFFresnelBlend}, utilities::{math::fmax, onb::ONB}};
 use rand::{prelude::ThreadRng, Rng};
 
 use crate::{
@@ -45,6 +45,13 @@ pub enum Material {
         material2: Box<Material>,
         ratio: f32,
     },
+    FresnelBlend{
+        r_s: Vector3<f32>,
+        r_d: Vector3<f32>,
+        k_specular: f32,
+        nu: f32,
+        nv: f32,
+    }
 }
 
 impl Material {
@@ -81,7 +88,7 @@ impl Material {
                     hit.p,
                     reflected + Vector3::random_in_unit_sphere(rng) * (*fuzz),
                 );
-                let cos_theta = fmin(Vector3::dot(unit_direction * (-1.0), hit.normal), 1.0);
+                let cos_theta = fmin(Vector3::dot(unit_direction*(-1.0) , hit.normal), 1.0);
 
                 let reflected_albedo = metal_reflectance(cos_theta, *albedo);
                 Some(ScatterRecord::Specular {
@@ -132,16 +139,12 @@ impl Material {
                 k_specular,
                 exponent,
             } => {
-                let pdf_diffuse = PDFType::PDFCosine {
-                    pdf: PDFCosine::new(hit.normal),
-                };
-                let pdf_specular = PDFType::PDFBlinnPhongSpec {
-                    pdf: PDFBlinnPhongSpec::new(r_in.direction, hit.normal, *exponent),
+
+                let pdf = PDFType::PDFBlinnPhongSpec {
+                    pdf: PDFBlinnPhongSpec::new(r_in.direction, hit.normal, *k_specular,*exponent),
                 };
                 Some(ScatterRecord::SpecularDiffuse {
-                    pdf_diffuse,
-                    pdf_specular,
-                    k_specular: *k_specular,
+                    pdf,
                     attenuation: *color,
                 })
             }
@@ -156,52 +159,80 @@ impl Material {
                     material2.scatter(r_in, hit, rng)
                 }
             }
-            /*Material::FresnelBlend=>{
-
-            },*/
+            Material::FresnelBlend { r_s:_, r_d, nu, nv, k_specular }=>{
+                let pdf = PDFType::PDFFresnelBlend {
+                    pdf: PDFFresnelBlend::new(r_in.direction, hit.normal, *nu,*nv, *k_specular),
+                };
+                Some(ScatterRecord::SpecularDiffuse {
+                    pdf,
+                    attenuation: *r_d,
+                })
+            },
             _ => None,
         }
     }
 
-    /*pub fn scattering_pdf(
+    pub fn eval_brdf(
         &self,
         r_in: &Ray,
         hit: &HitRecord,
+        attenuation: Vector3<f32>,
         scattered: &Ray,
-        rng: &mut ThreadRng,
-    ) -> f32 {
+    ) -> Vector3<f32> {
         match self {
             Material::Lambertian { albedo: _ } => {
                 let cosine = Vector3::dot(hit.normal, scattered.direction.norm());
-                (cosine / PI).max(0.0)
+                attenuation*(cosine / PI).max(0.0)
             }
 
             Material::TexturedLambertian { texture: _ } => {
                 let cosine = Vector3::dot(hit.normal, scattered.direction.norm());
-                (cosine / PI).max(0.0)
+                attenuation*(cosine / PI).max(0.0)
             }
 
-            Material::Isotropic { color: _ } => 1.0 / (4.0 * PI),
+            Material::Isotropic { color: _ } => attenuation / (4.0 * PI),
 
             Material::BlinnPhong {
-                color: _,
-                m_specular,
+                color,
+                k_specular,
                 exponent,
             } => {
-                if rng.gen::<f32>() < *m_specular {
-                    let random_normal =
-                        ((r_in.direction * (-1.0)).norm() + scattered.direction.norm()).norm();
-                    let cosine = fmax(Vector3::dot(random_normal, hit.normal), 0.0);
-                    let normal_pdf = (*exponent + 1.0) / (2.0 * PI) * cosine.powf(*exponent);
-                    normal_pdf / (4.0 * Vector3::dot(r_in.direction * (-1.0), random_normal))
-                } else {
                     let cosine = Vector3::dot(hit.normal, scattered.direction.norm());
-                    (cosine / PI).max(0.0)
-                }
+                    let random_normal =
+                    ((r_in.direction * (-1.0)).norm() + scattered.direction.norm()).norm();
+                let cosine_specular = fmax(Vector3::dot(random_normal, hit.normal), 0.0);
+                    let specular = (*exponent + 8.0) / (8.0 * PI) * cosine_specular.powf(*exponent);
+                    ((*color / PI)*(1.0-*k_specular) + Vector3::new(1.0,1.0,1.0)* *k_specular*specular)*cosine.max(0.0)
+                
             }
-            _ => 1.0,
+
+            Material::FresnelBlend { r_s, r_d, nu, nv , k_specular}=>{
+                let v = r_in.direction.norm() * (-1.0);
+                let l = scattered.direction.norm();
+
+                if Vector3::dot(hit.normal,l)<0.0{
+                    return Vector3::new(0.0,0.0,0.0);
+                }
+                let h = (v + l).norm();
+                let k_diffuse = 1.0-k_specular;
+                let r_s_corr = *r_s**k_specular;
+                let r_d_corr = *r_d*k_diffuse;
+                let onb_normal = ONB::build_from(hit.normal);
+
+                let exponent = (*nu*Vector3::dot(h,onb_normal.u).powi(2)+*nv*Vector3::dot(h,onb_normal.v).powi(2))/(1.0-Vector3::dot(h,onb_normal.w ).powi(2));
+
+                let denominator = Vector3::dot(h,v)*fmax(Vector3::dot(hit.normal,v),Vector3::dot(hit.normal,l));
+
+                let fresnel = r_s_corr + (Vector3::new(1.0,1.0,1.0)-r_s_corr) * (1.0-Vector3::dot(v,h)).powi(5);
+
+                let specular_brdf = fresnel*((*nu+1.0)*(*nv+1.0)).sqrt()/(8.0*PI)*Vector3::dot(hit.normal,h).powf(exponent)/denominator;
+                let diff_const = r_d_corr*(Vector3::new(1.0,1.0,1.0)-r_s_corr)*28.0/(23.0*PI);
+                let diffuse_brdf = diff_const * (1.0-(1.0-Vector3::dot(hit.normal,v)/2.0).powi(5))*(1.0-(1.0-Vector3::dot(hit.normal,l)/2.0).powi(5));
+               (diffuse_brdf + specular_brdf)*Vector3::dot(hit.normal, l)
+            }
+            _ => Vector3::new(1.0,1.0,1.0),
         }
-    }*/
+    }
 
     #[inline(always)]
     pub fn emit(&self, u: f32, v: f32, p: Vector3<f32>, front_face: bool) -> Vector3<f32> {
@@ -256,9 +287,7 @@ pub enum ScatterRecord<'a> {
         attenuation: Vector3<f32>,
     },
     SpecularDiffuse {
-        pdf_specular: PDFType<'a>,
-        pdf_diffuse: PDFType<'a>,
-        k_specular: f32,
+        pdf: PDFType<'a>,
         attenuation: Vector3<f32>,
     },
 }

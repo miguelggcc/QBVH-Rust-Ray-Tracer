@@ -278,13 +278,13 @@ impl Scenes {
             }
 
             Self::HDRISun => {
-                let (env_map, hdri) = load_hdri("HDRIs/sun.hdr", 120.0);
+                let (env_map, hdri) = load_hdri("HDRIs/studio.hdr", 120.0);
 
-                let look_from = Vector3::new(-6.0, 1.0, 0.0);
+                let look_from = Vector3::new(-6.0, 0.8, 0.0);
                 let look_at = Vector3::new(0.0, 0.0, 0.0);
                 let vup = Vector3::new(0.0, 1.0, 0.0);
                 let dist_to_focus = (look_at - look_from).magnitude();
-                let aperture = 0.1;
+                let aperture = 0.0;
 
                 let camera = Camera::new(
                     look_from,
@@ -315,10 +315,17 @@ impl Scenes {
                     Vector3::new(-2.1, -0.98, 0.0),
                     60.0,
                     1,
-                    Material::BlinnPhong {
+                    /*Material::BlinnPhong {
                         color: Vector3::new(0.12, 0.45, 0.15),
                         k_specular: 0.08,
                         exponent: 50.0,
+                    },*/
+                    Material::FresnelBlend {
+                        r_d: Vector3::new(0.0, 0.0, 0.0),
+                        r_s: Vector3::new(0.983, 0.991, 0.995),
+                        k_specular: 1.0,
+                        nu: 100.0,
+                        nv: 100.0,
                     },
                 );
 
@@ -328,10 +335,17 @@ impl Scenes {
                     Vector3::new(0.0, -1.42, -1.3),
                     -70.0,
                     1,
-                    Material::BlinnPhong {
+                    /*Material::BlinnPhong {
                         color: Vector3::new(0.6, 0.2, 0.1),
                         k_specular: 0.1,
                         exponent: 100.0,
+                    },*/
+                         Material::FresnelBlend {
+                        r_d: Vector3::new(0.6, 0.2, 0.1),
+                        r_s: Vector3::new(1.0,1.0,1.0),
+                        k_specular: 0.1,
+                        nu: 100.0,
+                        nv: 100.0,
                     },
                 );
 
@@ -352,12 +366,13 @@ impl Scenes {
                             albedo: Vector3::new(0.542, 0.497, 0.449),
                             fuzz: 0.0,
                         },
+                       
                     ),
                     Object::build_xz_rect(-5.0, 5.0, -5.0, 5.0, -0.98, material_ground, false),
                 ];
 
                 teapot.push_to_objects(&mut objects);
-                bunny.push_to_objects(&mut objects);
+                //bunny.push_to_objects(&mut objects);
 
                 SceneConfig::new(objects, camera, vec![env_map], Background::new_hdri(hdri))
             }

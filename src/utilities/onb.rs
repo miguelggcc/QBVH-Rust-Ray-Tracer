@@ -8,14 +8,15 @@ pub struct ONB {
 impl ONB {
     pub fn build_from(n: Vector3<f32>) -> Self {
         let w = n.norm();
-        let a = if w.x.abs() > 0.9 {
-            Vector3::new(0.0, 1.0, 0.0)
-        } else {
-            Vector3::new(1.0, 0.0, 0.0)
-        };
 
-        let v = Vector3::cross(w, a).norm();
-        let u = Vector3::cross(w, v);
+        let u = Vector3::cross(Vector3::new(0.0, 1.0, 0.0), w);
+         let u =   if u.magnitude2()<0.00000001{
+                 Vector3::cross(Vector3::new(1.0, 0.0, 0.0), w).norm()
+            } else{
+                u.norm()
+            };
+
+        let v = Vector3::cross(w, u);
         Self { u, v, w }
     }
     pub fn local(&self, a: Vector3<f32>) -> Vector3<f32> {

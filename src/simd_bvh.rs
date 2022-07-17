@@ -202,6 +202,7 @@ impl SceneBVH {
 
                     let hits = tree.hit(&r_v, t_min_v, t_max_v).as_u32();
                     assert!(queue_index + 4 <= queue.len());
+
                     for i in 0..4 {
                         if hits[i] != 0 {
                             unsafe {

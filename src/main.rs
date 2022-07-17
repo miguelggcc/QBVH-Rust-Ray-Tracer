@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (width, height) = match commands.value_of("resolution") {
         Some("480") => (640, 480),
-        Some("720") => (1280, 720),
+        Some("720") => (920, 720),
         Some("1080") => (1920, 1080),
         _ => {
             unreachable!()

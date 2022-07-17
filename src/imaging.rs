@@ -30,7 +30,7 @@ pub fn tone_map(frame: &[f32], frame_rgb: &mut [u8]) {
         .enumerate()
         .for_each(|(i, pixel_rgb)| {
             // change exposition
-            let exp = 5.0;
+            let exp = 10.0;
             let r = frame[i * 3];
             let g = frame[i * 3 + 1];
             let b = frame[i * 3 + 2];
