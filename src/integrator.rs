@@ -143,15 +143,13 @@ fn ray_color(
                         if eval==eval && pdf_val==pdf_val && pdf_val>0.0{
                             color = color*eval/pdf_val;
                         }
-                        
-
+                    
                         scatter_ray = scattered;
                     }
                 }
-                
                 //Russian roulette
-                if bounces>6{
-                let q = fmax(0.03,1.0-color.luminance());
+                if bounces>5{
+                let q = fmax(0.03,1.0-color.max_axis());
                 if rng.gen::<f32>() < q {
                     break;
                 } else {
@@ -176,7 +174,7 @@ fn ray_color(
 }
 
 #[inline(always)]
-fn get_color(color: Vector3<f32>, samples_per_pixel: f32, exposure: f32) -> [f32; 3] {
+fn get_color(color: Vector3<f32>, samples_per_pixel: f32, _exposure: f32) -> [f32; 3] {
     /*let r = color.x / samples_per_pixel;
     let g = color.y / samples_per_pixel;
     let b = color.z / samples_per_pixel;*/

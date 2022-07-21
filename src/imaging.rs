@@ -1,6 +1,5 @@
 use std::time::Instant;
 
-use image::{ImageBuffer, Pixel, Rgb, Rgb32FImage};
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     slice::ParallelSliceMut,
@@ -63,16 +62,13 @@ let b =  frame[i*3+2];
 pub fn bloom(frame: &mut [f32], width: u32, height: u32) {
     let bias_hdr = 0.03;
     let start = Instant::now();
-    let image = image::Rgb32FImage::from_raw(width, height, frame.to_vec()).unwrap();
-    let mut blurred_rgb = vec![0; (width * height) as usize * 4];
-    frame
-        .iter_mut()
+    let frame_2 = frame.to_vec().clone();
+        frame.iter_mut()
         .for_each(|frame_item| *frame_item *= 1.0 - bias_hdr);
 
     for i in 0..5 {
-        let image_blur = image.clone();
-        let blurred = gaussian_blur(&image_blur, 1.0 * 2.0f32.powi(i));
-        tone_map(&blurred.as_raw(), &mut blurred_rgb);
+        let blurred = gaussian_blur(&frame_2, width,height,1.0 * 2.0f32.powi(i));
+        //tone_map(&blurred, &mut blurred_rgb);
         /*image::save_buffer(
             format!("blurred{}.png",i),
             &blurred_rgb,
@@ -83,7 +79,7 @@ pub fn bloom(frame: &mut [f32], width: u32, height: u32) {
         .unwrap();*/
         frame
             .iter_mut()
-            .zip(blurred.as_raw())
+            .zip(blurred)
             .for_each(|(frame_item, blurred_item)| *frame_item += bias_hdr * blurred_item);
     }
     let duration = start.elapsed();
@@ -91,28 +87,31 @@ pub fn bloom(frame: &mut [f32], width: u32, height: u32) {
 }
 
 fn gaussian_blur(
-    image: &ImageBuffer<Rgb<f32>, Vec<f32>>,
+    image: &[f32],
+    width: u32,
+    height: u32,
     sigma: f32,
-) -> ImageBuffer<Rgb<f32>, Vec<f32>> {
+) -> Vec<f32> {
     let kernel_size = 1.0 + 2.0 * (2.0 * sigma * sigma * 5.29831736655).sqrt(); //ln(0.005)
 
-    let tmp: Rgb32FImage = vertical_sample(image, sigma, kernel_size);
-    horizontal_sample(&tmp, sigma, kernel_size)
+    let tmp = vertical_sample(image, width,height,sigma, kernel_size);
+    horizontal_sample(&tmp, width,height,sigma, kernel_size)
 }
 fn horizontal_sample(
-    image: &Rgb32FImage,
+    image: &[f32],
+    width: u32,
+    height: u32,
     sigma: f32,
     kernel_size: f32,
-) -> ImageBuffer<Rgb<f32>, Vec<f32>> {
-    let (width, height) = image.dimensions();
-    let mut out = ImageBuffer::new(width, height);
-    let mut ws = Vec::new();
+) -> Vec<f32> {
+    let mut out = vec![0.0;image.len()];
 
     let src_support = kernel_size * 0.5;
 
-    for outx in 0..width {
-        // Find the point in the input image corresponding to the centre
-        // of the current pixel in the output image.
+    out.par_chunks_mut(3*height as usize).enumerate().for_each(|(outx, slice)|{
+        //for outx in 0..width {
+
+
         let inputx = outx as f32 + 0.5;
 
         // Left and right are slice bounds for the input pixels relevant
@@ -135,7 +134,7 @@ fn horizontal_sample(
         // below, as the kernel treats the centre of a pixel as 0.
         let inputx = inputx - 0.5;
 
-        ws.clear();
+        let mut ws = Vec::new();
         let mut sum = 0.0;
         for i in left..right {
             let w = gaussian(sigma, i as f32 - inputx);
@@ -145,44 +144,37 @@ fn horizontal_sample(
         ws.iter_mut().for_each(|w| *w /= sum);
 
         for y in 0..height {
-            let mut t = (0.0, 0.0, 0.0, 0.0);
+            let mut t = Vector3::new(0.0,0.0,0.0);
 
             for (i, w) in ws.iter().enumerate() {
-                let p = image.get_pixel(left + i as u32, y);
+                let index = ((left as usize + i)+(y*width) as usize)*3;
+                let vec = Vector3::from_array(&image[index..index+3]);
 
-                #[allow(deprecated)]
-                let vec = p.channels4();
+                t += vec**w;
 
-                t.0 += vec.0 * w;
-                t.1 += vec.1 * w;
-                t.2 += vec.2 * w;
-                t.3 += vec.3 * w;
             }
 
-            #[allow(deprecated)]
-            let t = Pixel::from_channels(t.0, t.1, t.2, t.3);
-
-            out.put_pixel(outx, y, t);
+                        //out[3*(y*width+outx) as usize.. 3*(y*width+outx) as usize+3].copy_from_slice(&t.to_array());
+            slice[3*(y) as usize.. 3*(y) as usize+3].copy_from_slice(&t.to_array());
         }
-    }
-
-    out
+    });
+    //out
+image_transpose(&out, height as usize, width as usize)
 }
 
 fn vertical_sample(
-    image: &Rgb32FImage,
+    image: &[f32],
+    width: u32,
+    height: u32,
     sigma: f32,
     kernel_size: f32,
-) -> ImageBuffer<Rgb<f32>, Vec<f32>> {
-    let (width, height) = image.dimensions();
-    let mut out = ImageBuffer::new(width, height);
-    let mut ws = Vec::new();
+) -> Vec<f32> {
+    let mut out = vec![0.0;image.len()];
 
     let src_support = kernel_size * 0.5;
 
-    for outy in 0..height {
-        // For an explanation of this algorithm, see the comments
-        // in horizontal_sample.
+    out.par_chunks_mut(3*width as usize).enumerate().for_each(|(outy, slice)|{
+
         let inputy = outy as f32 + 0.5;
 
         let left = (inputy - src_support).floor() as i64;
@@ -197,7 +189,7 @@ fn vertical_sample(
 
         let inputy = inputy - 0.5;
 
-        ws.clear();
+        let mut ws = Vec::new();
         let mut sum = 0.0;
         for i in left..right {
             let w = gaussian(sigma, i as f32 - inputy);
@@ -207,31 +199,35 @@ fn vertical_sample(
         ws.iter_mut().for_each(|w| *w /= sum);
 
         for x in 0..width {
-            let mut t = (0.0, 0.0, 0.0, 0.0);
 
-            for (i, w) in ws.iter().enumerate() {
-                let p = image.get_pixel(x, left + i as u32);
+        let mut t = Vector3::new(0.0,0.0,0.0);
 
-                #[allow(deprecated)]
-                let vec = p.channels4();
+        for (i, w) in ws.iter().enumerate() {
+            let index = (x as usize+(left as usize+i)*width as usize)*3;
+            let vec = Vector3::from_array(&image[index..index+3]);
 
-                t.0 += vec.0 * w;
-                t.1 += vec.1 * w;
-                t.2 += vec.2 * w;
-                t.3 += vec.3 * w;
-            }
+            t += vec**w;
 
-            #[allow(deprecated)]
-            // This is not necessarily Rgba.
-            let t = Pixel::from_channels(t.0, t.1, t.2, t.3);
-
-            out.put_pixel(x, outy, t);
         }
+        slice[3*(x) as usize.. 3*(x) as usize+3].copy_from_slice(&t.to_array());
     }
+});
 
     out
 }
 
 fn gaussian(sigma: f32, x: f32) -> f32 {
     (-(x * x) / (2.0 * sigma * sigma)).exp()
+}
+
+fn image_transpose<T>(image: &[T], width: usize, height: usize) -> Vec<T> 
+where T: Copy{
+    let mut t: Vec<T> = Vec::with_capacity(image.len());
+    for i in 0..width {
+        for j in 0..height {
+            let index = j*width+i;
+            t.extend_from_slice(&image[3*index..3*index+3]);
+        }
+    }
+    t
 }

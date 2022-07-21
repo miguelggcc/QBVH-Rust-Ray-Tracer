@@ -23,6 +23,7 @@ pub enum Scenes {
     Balls,
     Model3D,
     David,
+    Sponza,
 }
 
 impl Scenes {
@@ -221,16 +222,6 @@ impl Scenes {
             Self::HDRITest => {
                 let (env_map, hdri) = load_hdri("HDRIs/tokyo.hdr", 0.0);
 
-                /*let mut max=0.0;
-                let mut index = 0;
-                image_v.iter().enumerate().for_each(|(i,pixel)|{
-                    let acc = pixel[0]+pixel[1]+pixel[2];
-                    if max<acc{
-                        max=acc;
-                    index = i;}
-                    }
-                );
-                dbg!(max, &image_v[index]);*/
                 let look_from = Vector3::new(-6.0, 1.0, 0.0);
                 let look_at = Vector3::new(0.0, 0.0, 0.0);
                 let vup = Vector3::new(0.0, 1.0, 0.0);
@@ -274,17 +265,17 @@ impl Scenes {
                     Object::build_xz_rect(-5.0, 5.0, -5.0, 5.0, -0.98, material_ground, false),
                 ];
 
-                SceneConfig::new(objects, camera, vec![env_map], Background::new_hdri(hdri))
+                SceneConfig::new(objects, camera, vec![env_map,Object::build_sphere(Vector3::new(0.0, 0.0, -1.0), 0.98,cr)], Background::new_hdri(hdri))
             }
 
             Self::HDRISun => {
-                let (env_map, hdri) = load_hdri("HDRIs/studio.hdr", 120.0);
+                /*let (env_map, hdri) = load_hdri("HDRIs/studio.hdr", 120.0);
 
-                let look_from = Vector3::new(-6.0, 0.8, 0.0);
-                let look_at = Vector3::new(0.0, 0.0, 0.0);
+                let look_from = Vector3::new(-6.0, 1.0, -0.5);
+                let look_at = Vector3::new(0.0, 0.0, -0.5);
                 let vup = Vector3::new(0.0, 1.0, 0.0);
-                let dist_to_focus = (look_at - look_from).magnitude();
-                let aperture = 0.0;
+                let dist_to_focus = (look_at - look_from).magnitude()-1.5;
+                let aperture = 0.05;
 
                 let camera = Camera::new(
                     look_from,
@@ -324,12 +315,28 @@ impl Scenes {
                         r_d: Vector3::new(0.0, 0.0, 0.0),
                         r_s: Vector3::new(0.983, 0.991, 0.995),
                         k_specular: 1.0,
-                        nu: 100.0,
-                        nv: 100.0,
+                        nu: 1000.0,
+                        nv: 10.0,
                     },
                 );
 
-                let mut bunny = TriangleMesh::load(
+                let mut dragon = TriangleMesh::load(
+                    "objs/xyzrgb_dragon.obj",
+                    0.02,
+                    Vector3::new(0.0,0.0,0.0),
+                    -90.0,
+                    0,
+
+                    Material::FresnelBlend {
+                        r_d: Vector3::new(0.0, 0.0, 0.0),
+                        r_s: Vector3::new(0.983, 0.991, 0.995),
+                        k_specular: 0.15,
+                        nu: 50.0,
+                        nv: 50.0,
+                    },
+                ).rotate_y(170.0).translate(Vector3::new(-1.0, -0.98, -0.8));
+
+                let mut _bunny = TriangleMesh::load(
                     "objs/stanford-bunny.obj",
                     13.0,
                     Vector3::new(0.0, -1.42, -1.3),
@@ -373,6 +380,108 @@ impl Scenes {
 
                 teapot.push_to_objects(&mut objects);
                 //bunny.push_to_objects(&mut objects);
+                dragon.push_to_objects(&mut objects);
+
+                SceneConfig::new(objects, camera, vec![env_map], Background::new_hdri(hdri))
+            }*/
+
+            let (env_map, hdri) = load_hdri("HDRIs/room.hdr", 120.0);
+
+                let look_from = Vector3::new(-6.0, 0.8, 0.0);
+                let look_at = Vector3::new(0.0, 0.0, 0.0);
+                let vup = Vector3::new(0.0, 1.0, 0.0);
+                let dist_to_focus = (look_at - look_from).magnitude();
+                let aperture = 0.0;
+
+                let camera = Camera::new(
+                    look_from,
+                    look_at,
+                    vup,
+                    40.0,
+                    width / height,
+                    aperture,
+                    dist_to_focus,
+                    0.8,
+                );
+
+                let path = Path::new("textures/marble4.jpg");
+                let image = image::open(path)
+                    .map_err(|e| format!("Failed to read image from {:?}: {}", path, e))
+                    .unwrap();
+                let image_v = image.as_bytes();
+                let material_ground = Material::TexturedLambertian {
+                    texture: Texture::Image {
+                        image_v: Arc::new(image_v.to_vec()),
+                        width: image.width() as f32,
+                        height: image.height() as f32,
+                    },
+                };
+                let mut teapot = TriangleMesh::load(
+                    "objs/teapot_highpoly.obj",
+                    0.06,
+                    Vector3::new(-2.1, -0.98, 0.0),
+                    60.0,
+                    1,
+                    /*Material::BlinnPhong {
+                        color: Vector3::new(0.12, 0.45, 0.15),
+                        k_specular: 0.08,
+                        exponent: 50.0,
+                    },*/
+                    /*Material::AshikhminShirley {
+                        r_d: Vector3::new(0.0, 0.0, 0.0),
+                        r_s: Vector3::new(0.983, 0.991, 0.995),
+                        k_specular: 1.0,
+                        nu: 1000.0,
+                        nv: 10.0,
+                    },*/
+                    Material::ColoredDielectric { index_of_refraction: 1.5, absorption: 10.3, color: Vector3::new(0.0,1.0,1.0)}
+                );
+
+                let mut bunny = TriangleMesh::load(
+                    "objs/stanford-bunny.obj",
+                    13.0,
+                    Vector3::new(0.0, -1.42, -1.3),
+                    -70.0,
+                    1,
+                    /*Material::BlinnPhong {
+                        color: Vector3::new(0.6, 0.2, 0.1),
+                        k_specular: 0.1,
+                        exponent: 100.0,
+                    },*/
+                         /*Material::AshikhminShirley {
+                        r_d: Vector3::new(0.6, 0.2, 0.1),
+                        r_s: Vector3::new(1.0,1.0,1.0),
+                        k_specular: 0.1,
+                        nu: 100.0,
+                        nv: 100.0,
+                    },*/
+                    Material::ColoredDielectric { index_of_refraction: 1.5, absorption: 0.8, color: Vector3::new(1.0,0.0,0.0)}
+                );
+
+                let mut objects = vec![
+                    /*Object::build_sphere(
+                        Vector3::new(0.0, 0.0, -0.98),
+                        0.98,
+                        Material::BlinnPhong {
+                            color: Vector3::new(0.6, 0.2, 0.2),
+                            k_specular: 0.1,
+                            exponent: 150.0,
+                        },
+                    ),*/
+                    Object::build_sphere(
+                        Vector3::new(0.0, 0.0, 0.98),
+                        0.98,
+                        Material::Metal {
+                            albedo: Vector3::new(0.542, 0.497, 0.449),
+                            fuzz: 0.0,
+                        },
+                       
+                    ),
+                    Object::build_xz_rect(-5.0, 5.0, -5.0, 5.0, -0.98, material_ground, false),
+                ];
+
+                teapot.push_to_objects(&mut objects);
+                bunny.push_to_objects(&mut objects);
 
                 SceneConfig::new(objects, camera, vec![env_map], Background::new_hdri(hdri))
             }
@@ -561,6 +670,7 @@ impl Scenes {
                 )
                 .rotate_y(15.0)
                 .translate(Vector3::new(265.0, 0.0, 295.0));
+                
 
                 /*let box2 = Prism::build_prism(
                     Vector3::new(0.0, 0.0, 0.0),
@@ -573,25 +683,24 @@ impl Scenes {
                 let sphere = Object::build_sphere(
                     Vector3::new(190.0, 90.0, 190.0),
                     90.0,
-                    Material::Dielectric {
+                    Material::ColoredDielectric {
                         index_of_refraction: 1.5,
+                        absorption:0.15,
+                        color: Vector3::new(1.0,0.0,0.0)
                     },
                 );
-                box1.push_to_objects(&mut objects);
-                objects.push(sphere);
 
-                let (env_map, hdri) = load_hdri("HDRIs/sun.hdr", -15.0);
+                box1.push_to_objects(&mut objects);
+                objects.push(sphere.clone());
+
+                //let (env_map, hdri) = load_hdri("HDRIs/sun.hdr", -15.0);
 
                 SceneConfig::new(
                     objects,
                     camera,
                     vec![
                         rect_light,
-                        Object::build_sphere(
-                            Vector3::new(190.0, 90.0, 190.0),
-                            90.0,
-                            Material::default(),
-                        ),
+                        sphere
                     ],
                     Background::new_plain(Vector3::new(0.0, 0.0, 0.0)),
                     // Background::new_hdri(hdri)
@@ -761,16 +870,6 @@ impl Scenes {
                     dist_to_focus,
                     1.0,
                 );
-
-                let red = Material::Lambertian {
-                    albedo: Vector3::new(0.65, 0.05, 0.05),
-                };
-                let white = Material::Lambertian {
-                    albedo: Vector3::new(0.73, 0.73, 0.73),
-                };
-                let green = Material::Lambertian {
-                    albedo: Vector3::new(0.12, 0.45, 0.15),
-                };
 
                 let difflight = Material::DiffuseLight {
                     texture: Texture::SolidColor {
@@ -1092,75 +1191,57 @@ impl Scenes {
                     )],
                     Background::new_plain(Vector3::new(0.0, 0.0, 0.0)),
                 )
-            } /*Self::Macintosh => {
-                  let look_from = Vector3::new(27.80, 20.00, 90.00);
-                  let look_at = Vector3::new(27.80, 20.00, 0.0);
-                  let vup = Vector3::new(0.0, 1.0, 0.0);
-                  let dist_to_focus = 10.0;
-                  let aperture = 0.0;
+            },
+            Self::Sponza=>{
+                let look_from = Vector3::new(-80.0, 10.0, 0.0);
+                let look_at = Vector3::new(100.0, 100.0, 0.0);
+                let vup = Vector3::new(0.0, 1.0, 0.0);
+                let dist_to_focus = 2.0;
+                let aperture = 0.00;
 
-                  let camera = Camera::new(
-                      look_from,
-                      look_at,
-                      vup,
-                      29.0,
-                      width / height,
-                      aperture,
-                      dist_to_focus,
-                  );
+                let camera = Camera::new(
+                    look_from,
+                    look_at,
+                    vup,
+                    40.0,
+                    width / height,
+                    aperture,
+                    dist_to_focus,
+                    4.0,
+                );
+                let mut sponza = TriangleMesh::load(
+                    "objs/sponza.obj",
+                    0.1,
+                    Vector3::new(0.0, -0.0, -0.0),
+                    0.0,
+                    1,
+                    Material::default()
+                );
 
-                  let difflight = Material::DiffuseLight {
-                      texture: Texture::SolidColor {
-                          albedo: Vector3::new(0.0, 25.0, 0.0),
-                      },
-                  };
+                let mut objects = vec![];
+                sponza.push_to_objects(&mut objects);
 
-                  let material_ground = Material::TexturedLambertian {
-                      texture: Texture::Checker {
-                          color1: Vector3::new(0.0, 0.0, 0.0),
-                          color2: Vector3::new(249.0/255.0, 121.0/255.0, 136.0/255.0),
-                      },
-                  };
-                  let mut objects = vec![/*Object::build_sphere(
-                      Vector3::new(0.0, -10000.0, 0.0),
-                      10000.0,
-                      material_ground,
-                  )*/];
+                let diffsphere = Material::DiffuseLight {
+                    texture: Texture::SolidColor {
+                        albedo: Vector3::new(30.0,30.0,30.0),
+                    },
+                };
+                let sphere_light =
+                    Object::build_sphere(Vector3::new(0.0, 10.0, 0.0), 8.0, diffsphere);
+                objects.push(sphere_light.clone());
 
-                  let light = Object::build_xz_rect(
-                      60.0, 65.0, 7.50, 12.50, 55.40, difflight, true,
-                  );
-                  objects.push(light.clone());
 
-                  let helios = TriangleMesh::load(
-                      "objs/helios.obj",
-                      0.17,
-                      Vector3::new(0.0, 0.0, 0.0),
-                      -90.0,
-                      0,
-                      Material::Lambertian { albedo: Vector3::new(183.0/255.0,147.0/255.0,111.0/255.0) }
-                      //237.0 / 255.0, 192.0 / 255.0, 151.0 / 255.0
-                  );
+                //let (env_map, hdri) = load_hdri("HDRIs/street.hdr", 0.0);
 
-                  helios.rotate_y(-30.0).translate(Vector3::new(23.0, 8.50, 3.0)).push_to_objects(&mut objects);
+                SceneConfig::new(
+                    objects,
+                    camera,
+                    vec![sphere_light],
+                    //Background::new_hdri(hdri),
+                    Background::new_plain(Vector3::new(0.0, 0.0, 0.0)),
 
-                  let sphere = Object::build_sphere(
-                      Vector3::new(40.0, 7.0, 3.0),
-                      7.0,
-                      Material::BlinnPhong{
-                          color: Vector3::new(0.5,0.3,0.1), k_specular: 0.1, exponent: 50.0,
-                      },
-                  );
-
-                  objects.push(sphere);
-
-                  SceneConfig::new(
-                      objects,
-                      camera,
-                      vec![light],
-                      Vector3::new(0.3, 15.0/255.0, 30.0/255.0),
-                  )
-              }*/
+                )
+            },
         }
     }
 }

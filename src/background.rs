@@ -1,7 +1,6 @@
-use std::io::Write;
 use std::{
     f32::consts::PI,
-    fs::{self, File},
+    fs::{File},
     io::BufReader,
     sync::Arc,
 };

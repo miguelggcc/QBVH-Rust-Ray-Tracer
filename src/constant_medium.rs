@@ -27,20 +27,17 @@ impl Hittable for ConstantMedium {
         let mut rng = rand::thread_rng();
         if let Some(mut hit1) = self.boundary.hit(r, f32::MIN, f32::MAX) {
             if let Some(mut hit2) = self.boundary.hit(r, hit1.t + 0.0001, f32::MAX) {
-                if hit1.t < t_min {
-                    hit1.t = t_min;
-                }
-                if hit2.t > t_max {
-                    hit2.t = t_max;
-                }
+                hit1.t = hit1.t.max(t_min);
+                
+                hit2.t = hit2.t.min(t_max);
+                
 
                 if hit1.t >= hit2.t {
                     return None;
                 }
 
-                if hit1.t < 0.0 {
-                    hit1.t = 0.0;
-                }
+                hit1.t = hit1.t.max(0.0);
+                
 
                 let ray_length = r.direction.magnitude();
                 let distance_inside_boundary = (hit2.t - hit1.t) * ray_length;

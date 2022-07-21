@@ -53,6 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "balls",
                     "3Dmodel",
                     "david",
+                    "sponza"
                 ])
                 //.default_value("cornell_box"),
                 .default_value("3Dmodel"),
@@ -83,6 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("balls") => Scenes::Balls,
         Some("3Dmodel") => Scenes::Model3D,
         Some("david") => Scenes::David,
+        Some("sponza") => Scenes::Sponza,
         _ => {
             unreachable!()
         }

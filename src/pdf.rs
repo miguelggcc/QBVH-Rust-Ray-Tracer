@@ -12,7 +12,7 @@ pub enum PDFType<'a> {
     PDFCosine { pdf: PDFCosine },
     PDFSphere { pdf: PDFSphere },
     PDFBlinnPhongSpec { pdf: PDFBlinnPhongSpec },
-    PDFFresnelBlend {pdf: PDFFresnelBlend},
+    PDFAshikhminShirley {pdf: PDFAshikhminShirley},
 }
 
 impl PDFType<'_> {
@@ -46,7 +46,7 @@ impl PDFType<'_> {
 
                     (cosine / PI).max(0.0)*(1.0-pdf.k_specular) + normal_pdf / (4.0 * Vector3::dot(pdf.r_in_direction.norm() * (-1.0), random_normal))*pdf.k_specular
             }
-            Self::PDFFresnelBlend { pdf }=>{
+            Self::PDFAshikhminShirley { pdf }=>{
                 let v = pdf.r_in_direction.norm() * (-1.0);
                 let l = direction.norm();
                 let h = (v + l).norm();
@@ -81,7 +81,7 @@ impl PDFType<'_> {
             }} else{
                 pdf.onb_normal.local(Vector3::random_cosine_direction(rng))
             },
-            Self::PDFFresnelBlend { pdf }=>{
+            Self::PDFAshikhminShirley { pdf }=>{
               if rng.gen::<f32>()<pdf.k_specular{
                 let h = pdf.onb_normal.local(Vector3::random_as(pdf.nu, pdf.nv, rng));
                 let v = pdf.r_in_direction.norm();  
@@ -150,7 +150,7 @@ impl PDFBlinnPhongSpec {
     }
 }
 
-pub struct PDFFresnelBlend {
+pub struct PDFAshikhminShirley {
     r_in_direction: Vector3<f32>,
     onb_normal: ONB,
     nu: f32,
@@ -158,7 +158,7 @@ pub struct PDFFresnelBlend {
     k_specular: f32,
 }
 
-impl PDFFresnelBlend{
+impl PDFAshikhminShirley{
     pub fn new(r_in_direction: Vector3<f32>, normal: Vector3<f32>, nu: f32, nv :f32, k_specular: f32)->Self{
         let onb_normal = ONB::build_from(normal);
 

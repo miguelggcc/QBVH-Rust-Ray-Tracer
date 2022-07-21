@@ -14,12 +14,12 @@ pub struct Triangle {
     normal0: Vector3<f32>,
     normal1: Vector3<f32>,
     normal2: Vector3<f32>,
-    a: f32,
-    b: f32,
-    c: f32,
-    d: f32,
-    e: f32,
-    f: f32,
+    pub a: f32,
+    pub b: f32,
+    pub c: f32,
+    pub d: f32,
+    pub e: f32,
+    pub f: f32,
     bounding_box: AABB,
     material: Material,
 }
@@ -90,7 +90,8 @@ impl Hittable for Triangle {
         if t >= t_min && t <= t_max {
             let normal =
                 self.normal0 * (1.0 - beta - gamma) + self.normal1 * beta + self.normal2 * gamma;
-            Some(HitRecord::new(
+
+                Some(HitRecord::new(
                 r.at(t),
                 normal,
                 t,
@@ -99,7 +100,7 @@ impl Hittable for Triangle {
                 r,
                 &self.material,
             ))
-        } else {
+         } else {
             None
         }
     }
@@ -125,7 +126,7 @@ impl TriangleMesh {
         let object = tobj::load_obj(
             filename,
             &tobj::LoadOptions {
-                single_index: false,
+                single_index: true,
                 triangulate: true,
                 ignore_points: false,
                 ignore_lines: false,
@@ -137,13 +138,11 @@ impl TriangleMesh {
         let sin = rotation_angle.to_radians().sin();
 
         let (models, _) = object.expect("Failed to load OBJ file");
-        for (i, m) in models.iter().enumerate() {
+        let mut i_t = 0;
+        for (m_i, m) in models.iter().enumerate() {
             let mesh = &m.mesh;
+            println!("loading model {}: \'{}\' with {} vertices", m_i, m.name, mesh.positions.len() / 3);
 
-            println!("model[{}].name = \'{}\'", i, m.name);
-
-            // Normals and texture coordinates are also loaded, but not printed in this example
-            println!("model[{}].vertices: {}", i, mesh.positions.len() / 3);
             let mut v_normal = vec![Vector3::new(0.0, 0.0, 0.0); mesh.indices.len() / 3];
             assert!(mesh.positions.len() % 3 == 0);
             for i in 0..mesh.indices.len() / 3 {
@@ -152,31 +151,33 @@ impl TriangleMesh {
                 let ind2 = mesh.indices[3 * i + 2] as usize;
 
                 let p0: Vector3<f32> = Vector3::new(
-                    mesh.positions[3 * ind0].into(),
-                    mesh.positions[3 * ind0 + 1].into(),
-                    mesh.positions[3 * ind0 + 2].into(),
+                    mesh.positions[3 * ind0],
+                    mesh.positions[3 * ind0 + 1],
+                    mesh.positions[3 * ind0 + 2],
                 );
                 let p1 = Vector3::new(
-                    mesh.positions[3 * ind1].into(),
-                    mesh.positions[3 * ind1 + 1].into(),
-                    mesh.positions[3 * ind1 + 2].into(),
+                    mesh.positions[3 * ind1],
+                    mesh.positions[3 * ind1 + 1],
+                    mesh.positions[3 * ind1 + 2],
                 );
                 let p2 = Vector3::new(
-                    mesh.positions[3 * ind2].into(),
-                    mesh.positions[3 * ind2 + 1].into(),
-                    mesh.positions[3 * ind2 + 2].into(),
+                    mesh.positions[3 * ind2],
+                    mesh.positions[3 * ind2 + 1],
+                    mesh.positions[3 * ind2 + 2],
                 );
 
                 let p0 = p0.rotate(axis, cos, sin);
                 let p1 = p1.rotate(axis, cos, sin);
                 let p2 = p2.rotate(axis, cos, sin);
 
+                if mesh.normals.is_empty(){
                 let a = p1 - p0;
                 let b = p2 - p0;
                 let normal = Vector3::cross(a, b).norm();
                 v_normal[ind0] += normal;
                 v_normal[ind1] += normal;
                 v_normal[ind2] += normal;
+                }
 
                 triangles.push(Object::get_triangles_vertices(
                     p0 * scale + offset,
@@ -189,12 +190,30 @@ impl TriangleMesh {
                 let ind0 = mesh.indices[3 * i] as usize;
                 let ind1 = mesh.indices[3 * i + 1] as usize;
                 let ind2 = mesh.indices[3 * i + 2] as usize;
-                triangles[i].set_normals(
+
+                if mesh.normals.is_empty(){
+                triangles[i+i_t].set_normals(
                     v_normal[ind0].norm(),
                     v_normal[ind1].norm(),
                     v_normal[ind2].norm(),
                 )
+            } else{
+                let mut normals = Vec::with_capacity(3);
+                for ind in [ind0,ind1,ind2].iter(){
+                    let normal_x = mesh.normals[3**ind];
+                    let normal_y = mesh.normals[3**ind+1];
+                    let normal_z = mesh.normals[3**ind+2];
+                    normals.push(Vector3::new(normal_x,normal_y,normal_z).rotate(axis, cos, sin));
+                }
+                /*dbg!(&normals,v_normal[ind0].norm(),
+                v_normal[ind1].norm(),
+                v_normal[ind2].norm(),);*/
+                triangles[i+i_t].set_normals(
+                    normals[0],normals[1],normals[2]
+                )
             }
+            }
+            i_t+=mesh.indices.len() / 3;
         }
 
         Self { triangles }

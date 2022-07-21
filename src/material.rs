@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{pdf::{PDFBlinnPhongSpec, PDFCosine, PDFSphere, PDFFresnelBlend}, utilities::{math::fmax, onb::ONB}};
+use crate::{pdf::{PDFBlinnPhongSpec, PDFCosine, PDFSphere, PDFAshikhminShirley}, utilities::{math::fmax, onb::ONB}};
 use rand::{prelude::ThreadRng, Rng};
 
 use crate::{
@@ -26,6 +26,11 @@ pub enum Material {
     Dielectric {
         index_of_refraction: f32,
     },
+    ColoredDielectric{
+        index_of_refraction: f32,
+        absorption: f32,
+        color: Vector3<f32>,
+    },
     DiffuseLight {
         texture: Texture,
     },
@@ -45,7 +50,7 @@ pub enum Material {
         material2: Box<Material>,
         ratio: f32,
     },
-    FresnelBlend{
+    AshikhminShirley{
         r_s: Vector3<f32>,
         r_d: Vector3<f32>,
         k_specular: f32,
@@ -125,6 +130,40 @@ impl Material {
                     attenuation: Vector3::new(1.0, 1.0, 1.0),
                 })
             }
+            Material::ColoredDielectric { index_of_refraction, absorption, color } => {
+                let refraction_ratio = if hit.front_face {
+                    1.0 / index_of_refraction
+                } else {
+                    *index_of_refraction
+                };
+
+                let attenuation = if hit.front_face{
+                    Vector3::new(1.0,1.0,1.0)
+                } else{
+                    let dist = hit.t*r_in.direction.magnitude();
+                    (*color**absorption*dist*(-1.0)).exp()
+                };
+
+
+                let unit_direction = r_in.direction.norm();
+                let cos_theta = Vector3::dot(unit_direction * (-1.0), hit.normal);
+                let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+
+                let cannot_refract = refraction_ratio * sin_theta > 1.0;
+
+                let direction = if cannot_refract
+                    || reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+                {
+                    Vector3::reflect(unit_direction, hit.normal)
+                } else {
+                    Vector3::refract(unit_direction, hit.normal, refraction_ratio)
+                };
+
+                Some(ScatterRecord::Specular {
+                    specular_ray: Ray::new(hit.p, direction),
+                    attenuation,
+                })
+            }
             Material::Isotropic { color } => {
                 let pdf_sphere = PDFType::PDFSphere {
                     pdf: PDFSphere::new(),
@@ -159,9 +198,9 @@ impl Material {
                     material2.scatter(r_in, hit, rng)
                 }
             }
-            Material::FresnelBlend { r_s:_, r_d, nu, nv, k_specular }=>{
-                let pdf = PDFType::PDFFresnelBlend {
-                    pdf: PDFFresnelBlend::new(r_in.direction, hit.normal, *nu,*nv, *k_specular),
+            Material::AshikhminShirley { r_s:_, r_d, nu, nv, k_specular }=>{
+                let pdf = PDFType::PDFAshikhminShirley {
+                    pdf: PDFAshikhminShirley::new(r_in.direction, hit.normal, *nu,*nv, *k_specular),
                 };
                 Some(ScatterRecord::SpecularDiffuse {
                     pdf,
@@ -206,7 +245,7 @@ impl Material {
                 
             }
 
-            Material::FresnelBlend { r_s, r_d, nu, nv , k_specular}=>{
+            Material::AshikhminShirley { r_s, r_d, nu, nv , k_specular}=>{
                 let v = r_in.direction.norm() * (-1.0);
                 let l = scattered.direction.norm();
 
@@ -214,9 +253,9 @@ impl Material {
                     return Vector3::new(0.0,0.0,0.0);
                 }
                 let h = (v + l).norm();
-                let k_diffuse = 1.0-k_specular;
+                //let k_diffuse = 1.0-k_specular;
                 let r_s_corr = *r_s**k_specular;
-                let r_d_corr = *r_d*k_diffuse;
+                let r_d_corr = *r_d*1.0;
                 let onb_normal = ONB::build_from(hit.normal);
 
                 let exponent = (*nu*Vector3::dot(h,onb_normal.u).powi(2)+*nv*Vector3::dot(h,onb_normal.v).powi(2))/(1.0-Vector3::dot(h,onb_normal.w ).powi(2));

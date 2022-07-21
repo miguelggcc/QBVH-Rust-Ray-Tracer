@@ -1,3 +1,6 @@
+use std::ops::Neg;
+
+
 use crate::aabb::surrounding_box;
 use crate::aabb::AABB;
 use crate::object::*;
@@ -14,6 +17,7 @@ thread_local! {
 pub struct SceneBVH {
     objects: Vec<Object>,
     trees: Vec<Bvh>,
+    shuffle_lut: Vec<Vec<i32>>,
 }
 
 const TY_SHIFT: U32 = 31;
@@ -27,20 +31,35 @@ fn mk_object_id(index: usize) -> U32 {
 
 impl SceneBVH {
     pub fn from(objects: Vec<Object>) -> SceneBVH {
+        let shuffle_lut: Vec<Vec<i32>> = vec![
+            vec![0,0,0,0],
+            vec![3,0,0,0],
+            vec![2,0,0,0],
+            vec![2,3,0,0],
+            vec![1,0,0,0],
+            vec![1,3,0,0],
+            vec![1,2,0,0],
+            vec![1,2,3,0],
+            vec![0,1,2,3],
+            vec![0,3,0,0],
+            vec![0,2,0,0],
+            vec![0,2,3,1],
+            vec![0,1,2,3],
+            vec![0,1,3,2],
+            vec![0,1,2,3],
+            vec![0,1,2,3],
+        ];
+
         let mut scene = SceneBVH {
             objects,
             trees: vec![],
+            shuffle_lut,
         };
 
         let mut indices: Vec<usize> = (0..scene.objects.len()).collect();
 
         Self::from_objects(&mut scene.objects, &mut scene.trees, &mut indices);
-        println!("{}", scene.trees.len());
-        println!(
-            "{}",
-            scene.trees.len() * std::mem::size_of_val(&scene.trees[0])
-        );
-
+        println!("Number of nodes: {}", scene.trees.len());
         return scene;
     }
 
@@ -200,14 +219,22 @@ impl SceneBVH {
 
                     let t_max_v = F32x4::splat(t_max);
 
-                    let hits = tree.hit(&r_v, t_min_v, t_max_v).as_u32();
+                    let hits = tree.hit(&r_v, t_min_v, t_max_v).as_i32().neg();
                     assert!(queue_index + 4 <= queue.len());
+                    
+                    /*let hit_number = hits[3]+hits[2]*2+hits[1]*4 + hits[0]*8 ;
+                    let ones = hits.reduce_sum();
 
+                    let shuffled_ids = shuffle(tree.ids,hit_number);
+                    let shuffled_ids = shuffled_ids.as_array();
+                    queue[queue_index..queue_index+ones as usize].copy_from_slice(&shuffled_ids[0..ones as usize]);
+                    queue_index+=ones as usize;*/
                     for i in 0..4 {
                         if hits[i] != 0 {
                             unsafe {
                                 // let len = queue.len();
                                 *queue.get_unchecked_mut(queue_index) = tree.ids[i];
+                                //queue_index += (-hits[i]) as usize;
                                 queue_index += 1;
                                 //queue.set_len(len + 1);
                             }
@@ -225,6 +252,31 @@ impl SceneBVH {
     }
 }
 
+/*#[inline(always)]
+ fn shuffle(ids: Simd<u32,4>, hit_number: i32)->U32x4{
+
+    match hit_number{
+        0=> simd_swizzle!(ids,[0,0,0,0]),
+        1=>simd_swizzle!(ids,[3,0,0,0]),
+        2=>simd_swizzle!(ids,[2,0,0,0]),
+        3=>simd_swizzle!(ids,[2,3,0,0]),
+        4=>simd_swizzle!(ids,[1,0,0,0]),
+        5=>simd_swizzle!(ids,[1,3,0,0]),
+        6=>simd_swizzle!(ids,[1,2,0,0]),
+        7=>simd_swizzle!(ids,[1,2,3,0]),
+        8=>simd_swizzle!(ids,[0,1,2,3]),
+        9=>simd_swizzle!(ids,[0,3,0,0]),
+        10=>simd_swizzle!(ids,[0,2,0,0]),
+        11=>simd_swizzle!(ids,[0,2,3,1]),
+        12=>simd_swizzle!(ids,[0,1,2,3]),
+        13=>simd_swizzle!(ids,[0,1,3,2]),
+        14=>simd_swizzle!(ids,[0,1,2,3]),
+        15=>simd_swizzle!(ids,[0,1,2,3]),
+        _=>unreachable!(),
+    }
+}*/
+
+#[inline(always)]
 fn split<'a>(
     objects: &'a mut [Object],
     indices: &'a mut [usize],
@@ -234,6 +286,7 @@ fn split<'a>(
     &'a mut [Object],
     &'a mut [usize],
 ) {
+    #[inline(always)]
     fn sort_objects(objects: &mut [Object], axis: Axis) {
         objects.sort_by(|object1, object2| {
             (object1.bounding_box().centroid2(axis))
@@ -242,6 +295,7 @@ fn split<'a>(
         });
     }
     // From @cbiffle
+    #[inline(always)]
     fn axis_range(objects: &mut [Object], axis: Axis) -> f32 {
         let range = objects
             .iter()

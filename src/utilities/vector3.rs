@@ -136,6 +136,10 @@ impl Vector3<f32> {
         Vector3::new(fmax(self.x, v.x), fmax(self.y, v.y), fmax(self.z, v.z))
     }
     #[inline(always)]
+    pub fn exp(&self) -> Self {
+        Vector3::new(self.x.exp(), self.y.exp(), self.z.exp())
+    }
+    #[inline(always)]
     pub fn min_axis(&self) -> f32 {
         fmin(fmin(self.x, self.y), self.z)
     }
