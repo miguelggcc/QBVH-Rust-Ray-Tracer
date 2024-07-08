@@ -8,10 +8,10 @@ Monte Carlo Ray Tracer written in Rust from scratch. It features:
 * Bloom effect
 
 ![image-042](https://github.com/miguelggcc/raytracer/assets/100235899/855d7bf4-f269-4494-b6da-a60e0845e6dfc)
-![image-056](https://github.com/miguelggcc/raytracer/assets/100235899/6282162e-1635-43fb-a8ef-fed68a441835|width=480)
-![image-070_intel](https://github.com/miguelggcc/raytracer/assets/100235899/2010969b-3841-4551-abd2-a82f95d23ffa|width=480)
-![image-064](https://github.com/miguelggcc/raytracer/assets/100235899/6e131e57-a1b1-4f97-bbd3-514eca7e5ccf|width=480)
-![image-076_intel](https://github.com/miguelggcc/raytracer/assets/100235899/d63cc9bd-37f3-42f5-a664-60a6089ea59c|width=480)
+![image-056](https://github.com/miguelggcc/raytracer/assets/100235899/6282162e-1635-43fb-a8ef-fed68a441835|width=480px)
+![image-070_intel](https://github.com/miguelggcc/raytracer/assets/100235899/2010969b-3841-4551-abd2-a82f95d23ffa|width=480px)
+![image-064](https://github.com/miguelggcc/raytracer/assets/100235899/6e131e57-a1b1-4f97-bbd3-514eca7e5ccf|width=480px)
+![image-076_intel](https://github.com/miguelggcc/raytracer/assets/100235899/d63cc9bd-37f3-42f5-a664-60a6089ea59c|width=480px)
 
 
 
