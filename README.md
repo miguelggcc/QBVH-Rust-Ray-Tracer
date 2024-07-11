@@ -16,14 +16,10 @@ Monte Carlo Ray Tracer written in Rust from scratch. It features:
 
 
 
-[1] Shirley, P. (2016). *Ray Tracing in One Weekend*. GitHub. Retrieved from [https://github.com/RayTracing/raytracing.github.io](https://github.com/RayTracing/raytracing.github.io)
+[1] Shirley, P. (2018-2020). *Ray Tracing in One Weekend Book Series*. GitHub. Retrieved from [https://github.com/RayTracing/raytracing.github.io](https://github.com/RayTracing/raytracing.github.io)
 
-[2] Shirley, P. (2016). *Ray Tracing: The Next Week*. GitHub. Retrieved from [https://github.com/RayTracing/raytracing.github.io](https://github.com/RayTracing/raytracing.github.io)
+[2] Pharr, M., Jakob, W., & Humphreys, G. (2023). *Physically Based Rendering: From Theory to Implementation* (4th ed.). MIT Press. Retrieved from [https://www.pbrt.org/](https://www.pbrt.org/)
 
-[3] Shirley, P. (2016). *Ray Tracing: The Rest of Your Life*. GitHub. Retrieved from [https://github.com/RayTracing/raytracing.github.io](https://github.com/RayTracing/raytracing.github.io)
+[3] Shirley, P., & Morley, R. K. (2003). *Realistic Ray Tracing* (2nd ed.). A K Peters/CRC Press.
 
-[4] Pharr, M., Jakob, W., & Humphreys, G. (2023). *Physically Based Rendering: From Theory to Implementation* (4th ed.). MIT Press. Retrieved from [https://www.pbrt.org/](https://www.pbrt.org/)
-
-[5] Shirley, P., & Morley, R. K. (2003). *Realistic Ray Tracing* (2nd ed.). A K Peters/CRC Press.
-
-[6] Dammertz, H., Hanika, J., & Keller, A. (2008). *Shallow Bounding Volume Hierarchies for Fast SIMD Ray Tracing of Incoherent Rays*. Computer Graphics Forum.
+[4] Dammertz, H., Hanika, J., & Keller, A. (2008). *Shallow Bounding Volume Hierarchies for Fast SIMD Ray Tracing of Incoherent Rays*. Computer Graphics Forum.
