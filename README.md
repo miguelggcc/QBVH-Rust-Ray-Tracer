@@ -1,7 +1,8 @@
 Monte Carlo Ray Tracer written in Rust from scratch. It features:
 * Multithreading
 * Extremely fast Quad-BVH (Bounding Volume Hierarchy) with SIMD
-* Vast material selection
+* Vast material selection (Lambertian, textured, metal, colored dielectric, isotropic volume (fog or smoke), Blinn-Phong, anisotropic Ashikhmin-Shirley)
+* .obj loader
 * Triangle Rendering
 * HDRI background
 * Light Sampling
