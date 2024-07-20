@@ -1,6 +1,5 @@
 use std::ops::Neg;
 
-
 use crate::aabb::surrounding_box;
 use crate::aabb::AABB;
 use crate::object::*;
@@ -17,7 +16,6 @@ thread_local! {
 pub struct SceneBVH {
     objects: Vec<Object>,
     trees: Vec<Bvh>,
-    shuffle_lut: Vec<Vec<i32>>,
 }
 
 const TY_SHIFT: U32 = 31;
@@ -31,29 +29,9 @@ fn mk_object_id(index: usize) -> U32 {
 
 impl SceneBVH {
     pub fn from(objects: Vec<Object>) -> SceneBVH {
-        let shuffle_lut: Vec<Vec<i32>> = vec![
-            vec![0,0,0,0],
-            vec![3,0,0,0],
-            vec![2,0,0,0],
-            vec![2,3,0,0],
-            vec![1,0,0,0],
-            vec![1,3,0,0],
-            vec![1,2,0,0],
-            vec![1,2,3,0],
-            vec![0,1,2,3],
-            vec![0,3,0,0],
-            vec![0,2,0,0],
-            vec![0,2,3,1],
-            vec![0,1,2,3],
-            vec![0,1,3,2],
-            vec![0,1,2,3],
-            vec![0,1,2,3],
-        ];
-
         let mut scene = SceneBVH {
             objects,
             trees: vec![],
-            shuffle_lut,
         };
 
         let mut indices: Vec<usize> = (0..scene.objects.len()).collect();
@@ -221,7 +199,7 @@ impl SceneBVH {
 
                     let hits = tree.hit(&r_v, t_min_v, t_max_v).as_i32().neg();
                     assert!(queue_index + 4 <= queue.len());
-                    
+
                     /*let hit_number = hits[3]+hits[2]*2+hits[1]*4 + hits[0]*8 ;
                     let ones = hits.reduce_sum();
 
@@ -415,10 +393,6 @@ impl Tree {
 
         hit_max.lanes_gt(hit_min)
     }
-
-    /*fn set_tree_axes(&mut self, axes: [u8;3]){
-        self.axes = axes;
-    }*/
 }
 
 type Bvh = Tree; //<4>;

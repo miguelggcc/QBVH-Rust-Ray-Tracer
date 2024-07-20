@@ -5,7 +5,7 @@ use crate::{
     material::Material,
     object::{Hittable, Object},
     ray::HitRecord,
-    utilities::vector3::Vector3,
+    utilities::{math::Point2D, vector3::Vector3},
 };
 
 #[derive(Clone)]
@@ -14,6 +14,9 @@ pub struct Triangle {
     normal0: Vector3<f32>,
     normal1: Vector3<f32>,
     normal2: Vector3<f32>,
+    tex0: Point2D<f32>,
+    tex1: Point2D<f32>,
+    tex2: Point2D<f32>,
     pub a: f32,
     pub b: f32,
     pub c: f32,
@@ -24,7 +27,15 @@ pub struct Triangle {
     material: Material,
 }
 impl Triangle {
-    pub fn new(p0: Vector3<f32>, p1: Vector3<f32>, p2: Vector3<f32>, material: Material) -> Self {
+    pub fn new(
+        p0: Vector3<f32>,
+        p1: Vector3<f32>,
+        p2: Vector3<f32>,
+        tex0: Point2D<f32>,
+        tex1: Point2D<f32>,
+        tex2: Point2D<f32>,
+        material: Material,
+    ) -> Self {
         let minimum = (p0.min(p1)).min(p2);
         let maximum = (p0.max(p1)).max(p2);
         let bounding_box = AABB::new(minimum, maximum);
@@ -33,6 +44,9 @@ impl Triangle {
             normal0: Vector3::new(0.0, 0.0, 0.0),
             normal1: Vector3::new(0.0, 0.0, 0.0),
             normal2: Vector3::new(0.0, 0.0, 0.0),
+            tex0,
+            tex1,
+            tex2,
             a: p0.x - p1.x,
             b: p0.y - p1.y,
             c: p0.z - p1.z,
@@ -90,17 +104,17 @@ impl Hittable for Triangle {
         if t >= t_min && t <= t_max {
             let normal =
                 self.normal0 * (1.0 - beta - gamma) + self.normal1 * beta + self.normal2 * gamma;
-
-                Some(HitRecord::new(
+            let texcoord = self.tex0 * (1.0 - beta - gamma) + self.tex1 * beta + self.tex2 * gamma;
+            Some(HitRecord::new(
                 r.at(t),
                 normal,
                 t,
-                0.0,
-                0.0,
+                texcoord.x,
+                texcoord.y,
                 r,
                 &self.material,
             ))
-         } else {
+        } else {
             None
         }
     }
@@ -141,7 +155,12 @@ impl TriangleMesh {
         let mut i_t = 0;
         for (m_i, m) in models.iter().enumerate() {
             let mesh = &m.mesh;
-            println!("loading model {}: \'{}\' with {} vertices", m_i, m.name, mesh.positions.len() / 3);
+            println!(
+                "loading model {}: \'{}\' with {} vertices",
+                m_i,
+                m.name,
+                mesh.positions.len() / 3
+            );
 
             let mut v_normal = vec![Vector3::new(0.0, 0.0, 0.0); mesh.indices.len() / 3];
             assert!(mesh.positions.len() % 3 == 0);
@@ -170,19 +189,36 @@ impl TriangleMesh {
                 let p1 = p1.rotate(axis, cos, sin);
                 let p2 = p2.rotate(axis, cos, sin);
 
-                if mesh.normals.is_empty(){
-                let a = p1 - p0;
-                let b = p2 - p0;
-                let normal = Vector3::cross(a, b).norm();
-                v_normal[ind0] += normal;
-                v_normal[ind1] += normal;
-                v_normal[ind2] += normal;
+                if mesh.normals.is_empty() {
+                    let a = p1 - p0;
+                    let b = p2 - p0;
+                    let normal = Vector3::cross(a, b).norm();
+                    v_normal[ind0] += normal;
+                    v_normal[ind1] += normal;
+                    v_normal[ind2] += normal;
                 }
 
-                triangles.push(Object::get_triangles_vertices(
+                let (tex0, tex1, tex2) = if !mesh.texcoords.is_empty() {
+                    (
+                        Point2D::new(mesh.texcoords[ind0 * 2], mesh.texcoords[ind0 * 2 + 1]),
+                        Point2D::new(mesh.texcoords[ind1 * 2], mesh.texcoords[ind1 * 2 + 1]),
+                        Point2D::new(mesh.texcoords[ind2 * 2], mesh.texcoords[ind2 * 2 + 1]),
+                    )
+                } else {
+                    (
+                        Point2D::new(0.0, 0.0),
+                        Point2D::new(0.0, 0.0),
+                        Point2D::new(0.0, 0.0),
+                    )
+                };
+
+                triangles.push(Object::build_triangle(
                     p0 * scale + offset,
                     p1 * scale + offset,
                     p2 * scale + offset,
+                    tex0,
+                    tex1,
+                    tex2,
                     material.clone(),
                 ));
             }
@@ -191,29 +227,29 @@ impl TriangleMesh {
                 let ind1 = mesh.indices[3 * i + 1] as usize;
                 let ind2 = mesh.indices[3 * i + 2] as usize;
 
-                if mesh.normals.is_empty(){
-                triangles[i+i_t].set_normals(
-                    v_normal[ind0].norm(),
+                if mesh.normals.is_empty() {
+                    triangles[i + i_t].set_normals(
+                        v_normal[ind0].norm(),
+                        v_normal[ind1].norm(),
+                        v_normal[ind2].norm(),
+                    )
+                } else {
+                    let mut normals = Vec::with_capacity(3);
+                    for ind in [ind0, ind1, ind2].iter() {
+                        let normal_x = mesh.normals[3 * *ind];
+                        let normal_y = mesh.normals[3 * *ind + 1];
+                        let normal_z = mesh.normals[3 * *ind + 2];
+                        normals.push(
+                            Vector3::new(normal_x, normal_y, normal_z).rotate(axis, cos, sin),
+                        );
+                    }
+                    /*dbg!(&normals,v_normal[ind0].norm(),
                     v_normal[ind1].norm(),
-                    v_normal[ind2].norm(),
-                )
-            } else{
-                let mut normals = Vec::with_capacity(3);
-                for ind in [ind0,ind1,ind2].iter(){
-                    let normal_x = mesh.normals[3**ind];
-                    let normal_y = mesh.normals[3**ind+1];
-                    let normal_z = mesh.normals[3**ind+2];
-                    normals.push(Vector3::new(normal_x,normal_y,normal_z).rotate(axis, cos, sin));
+                    v_normal[ind2].norm(),);*/
+                    triangles[i + i_t].set_normals(normals[0], normals[1], normals[2])
                 }
-                /*dbg!(&normals,v_normal[ind0].norm(),
-                v_normal[ind1].norm(),
-                v_normal[ind2].norm(),);*/
-                triangles[i+i_t].set_normals(
-                    normals[0],normals[1],normals[2]
-                )
             }
-            }
-            i_t+=mesh.indices.len() / 3;
+            i_t += mesh.indices.len() / 3;
         }
 
         Self { triangles }

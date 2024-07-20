@@ -10,11 +10,11 @@ impl ONB {
         let w = n.norm();
 
         let u = Vector3::cross(Vector3::new(0.0, 1.0, 0.0), w);
-         let u =   if u.magnitude2()<0.00000001{
-                 Vector3::cross(Vector3::new(1.0, 0.0, 0.0), w).norm()
-            } else{
-                u.norm()
-            };
+        let u = if u.magnitude2() < 0.00000001 {
+            Vector3::cross(Vector3::new(1.0, 0.0, 0.0), w).norm()
+        } else {
+            u.norm()
+        };
 
         let v = Vector3::cross(w, u);
         Self { u, v, w }

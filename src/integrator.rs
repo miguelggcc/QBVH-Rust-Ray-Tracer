@@ -109,7 +109,7 @@ fn ray_color(
                     } => {
                         color = color * attenuation;
                         scatter_ray = specular_ray;
-                    },
+                    }
                     ScatterRecord::Scatter { pdf, attenuation } => {
                         let pdf_lights = PDFType::PDFObj {
                             pdf: PDF::new(hit.p, light),
@@ -125,40 +125,38 @@ fn ray_color(
                         }
 
                         scatter_ray = scattered;
-                    },
-                    ScatterRecord::SpecularDiffuse {
-                        pdf,
-                        attenuation,
-                    } => {
+                    }
+                    ScatterRecord::SpecularDiffuse { pdf, attenuation } => {
                         let pdf_lights = PDFType::PDFObj {
                             pdf: PDF::new(hit.p, light),
                         };
                         let mixture = PDFMixture::new(&pdf_lights, &pdf);
 
-
                         let scattered = Ray::new(hit.p, mixture.sample(chance, rng));
-
-                        let eval = hit.material.eval_brdf(&scatter_ray, &hit, attenuation, &scattered);
                         let pdf_val = mixture.value(chance, scattered.direction);
-                        if eval==eval && pdf_val==pdf_val && pdf_val>0.0{
-                            color = color*eval/pdf_val;
+
+                        let eval =
+                            hit.material
+                                .eval_brdf(&scatter_ray, &hit, attenuation, &scattered, );
+                        if eval == eval && pdf_val == pdf_val && pdf_val > 0.0 {
+                            color = color * eval / pdf_val;
                         }
-                    
+
+
                         scatter_ray = scattered;
                     }
                 }
                 //Russian roulette
-                if bounces>5{
-                let q = fmax(0.03,1.0-color.max_axis());
-                if rng.gen::<f32>() < q {
-                    break;
-                } else {
-                    color /= 1.0-q;
+                if bounces > 5 {
+                    let q = fmax(0.03, 1.0 - color.max_axis());
+                    if rng.gen::<f32>() < q {
+                        break;
+                    } else {
+                        color /= 1.0 - q;
+                    }
                 }
-            }
-            
+
                 continue;
-                
             } else {
                 let emitted = hit.material.emit(hit.u, hit.v, hit.p, hit.front_face);
                 return color * emitted;
@@ -179,7 +177,7 @@ fn get_color(color: Vector3<f32>, samples_per_pixel: f32, _exposure: f32) -> [f3
     let g = color.y / samples_per_pixel;
     let b = color.z / samples_per_pixel;*/
 
-    (color  / samples_per_pixel).to_array()
+    (color / samples_per_pixel).to_array()
 
     /*// change exposition
     let exp = 100000.0;

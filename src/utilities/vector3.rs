@@ -5,7 +5,8 @@ use num::{Float, Num};
 use rand::{prelude::ThreadRng, Rng};
 use std::{
     borrow::Borrow,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign}, f32::consts::PI,
+    f32::consts::PI,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -231,8 +232,7 @@ impl Vector3<f32> {
     pub fn random_as(nu: f32, nv: f32, rng: &mut ThreadRng) -> Self {
         let r1 = rng.gen::<f32>();
 
-
-        let (r1_corr,correction) = if r1<0.25{
+        /*let (r1_corr,correction) = if r1<0.25{
             (1.0-4.0*(0.5-r1), 0)
         } else if r1<0.5{
             (1.0-4.0*(0.5-r1), 1)
@@ -249,12 +249,15 @@ impl Vector3<f32> {
             1=>PI-phi,
             2=>PI+phi,
             _=> 2.0*PI-phi
-        };
+        };*/
+        let quad = 2.0 * PI * r1;
+        let phi_corr = ((nu + 1.0) * quad.sin()).atan2((nv + 1.0) * quad.cos());
 
         let r2 = rng.gen::<f32>();
 
-        let cos_theta = (1.0-r2).powf((nu*phi_corr.cos().powi(2)+nv*phi_corr.sin().powi(2)+1.0).recip());
-        let sin_theta = (1.0-cos_theta*cos_theta).sqrt();
+        let cos_theta = (1.0 - r2)
+            .powf((nu * phi_corr.cos().powi(2) + nv * phi_corr.sin().powi(2) + 1.0).recip());
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let x = phi_corr.cos() * sin_theta;
         let y = phi_corr.sin() * sin_theta;

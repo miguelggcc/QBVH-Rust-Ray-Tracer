@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
+use crate::utilities::vector3::Vector3;
 use image::Rgb;
 use num::clamp;
-
-use crate::utilities::vector3::Vector3;
 
 #[allow(dead_code)]
 #[derive(Clone)]
@@ -16,7 +15,7 @@ pub enum Texture {
         color2: Vector3<f32>,
     },
     Image {
-        image_v: Arc<Vec<u8>>,
+        image_v: Arc<Vec<f32>>,
         width: f32,
         height: f32,
     },
@@ -28,7 +27,20 @@ pub enum Texture {
 }
 
 impl Texture {
-    #[inline(always)]
+    pub fn load_texture(path: &str) -> Self {
+        let image = image::open(path)
+            .map_err(|e| format!("Failed to read image from {:?}: {}", path, e))
+            .unwrap();
+        let width = image.width() as f32;
+        let height = image.height() as f32;
+
+        Self::Image {
+            image_v: Arc::new(image.into_rgb32f().into_vec()),
+            width,
+            height,
+        }
+    }
+
     pub fn value(&self, u: f32, v: f32, p: Vector3<f32>) -> Vector3<f32> {
         match self {
             Self::SolidColor { albedo } => *albedo,
@@ -63,11 +75,7 @@ impl Texture {
                 }
 
                 let pixel = &image_v[(i + j * w as usize) * 3..(i + j * w as usize) * 3 + 3];
-                Vector3::new(
-                    pixel[0] as f32 / 255.0,
-                    pixel[1] as f32 / 255.0,
-                    pixel[2] as f32 / 255.0,
-                )
+                Vector3::new(pixel[0].powf(2.2), pixel[1].powf(2.2), pixel[2].powf(2.2))
             }
             Self::Hdri {
                 image_v,
@@ -85,8 +93,8 @@ impl Texture {
                 let i = ((u * width) as usize).min(w - 1);
                 let j = ((v * height) as usize).min(h - 1);
 
-                let pixel = image_v[(i + j * w)];
-                Vector3::new(pixel[0] as f32, pixel[1] as f32, pixel[2] as f32)
+                let pixel = image_v[i + j * w];
+                Vector3::new(pixel[0], pixel[1], pixel[2])
             }
         }
     }

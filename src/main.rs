@@ -36,7 +36,7 @@ use crate::{
     scenes::Scenes,
 };
 
-#[show_image::main]
+//#[show_image::main]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let commands = command!()
         .args(&[
@@ -53,7 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "balls",
                     "3Dmodel",
                     "david",
-                    "sponza"
+                    "sponza",
+                    "teapots",
                 ])
                 //.default_value("cornell_box"),
                 .default_value("3Dmodel"),
@@ -85,6 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("3Dmodel") => Scenes::Model3D,
         Some("david") => Scenes::David,
         Some("sponza") => Scenes::Sponza,
+        Some("teapots") => Scenes::Teapots,
         _ => {
             unreachable!()
         }
@@ -147,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create a window with default options and display the image.
-    let window = show_image::create_window(
+    /*let window = show_image::create_window(
         "RayTracing, ctrl+S to save",
         WindowOptions::default().set_size(Some([width, height])),
     )
@@ -163,7 +165,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 break;
             }
         }
-    }
+    }*/
 
     Ok(())
 }

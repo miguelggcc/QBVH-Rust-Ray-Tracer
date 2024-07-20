@@ -14,7 +14,7 @@ use crate::{
     sphere::Sphere,
     transformations::{RotateY, Translate},
     triangle_mesh::Triangle,
-    utilities::vector3::Vector3,
+    utilities::{math::Point2D, vector3::Vector3},
 };
 //#[enum_dispatch(Hittable)] //removed enum_dispatch crate for easier profiling
 #[derive(Clone)]
@@ -83,13 +83,16 @@ impl Object {
     pub fn rotate_y(self, angle: f32) -> Self {
         Object::RotateY(RotateY::new(self, angle))
     }
-    pub fn get_triangles_vertices(
+    pub fn build_triangle(
         p0: Vector3<f32>,
         p1: Vector3<f32>,
         p2: Vector3<f32>,
+        tex0: Point2D<f32>,
+        tex1: Point2D<f32>,
+        tex2: Point2D<f32>,
         material: Material,
     ) -> Self {
-        Object::Triangle(Triangle::new(p0, p1, p2, material))
+        Object::Triangle(Triangle::new(p0, p1, p2, tex0, tex1, tex2, material))
     }
     pub fn set_normals(
         &mut self,

@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use core::simd::*;
+use std::simd::{prelude::*, *};
 
 pub type B32x<const N: usize> = Mask<I32, N>;
 pub type U32x<const N: usize> = Simd<U32, N>;
@@ -72,6 +72,7 @@ where
     fn at_leastf(self, other: Self) -> Self;
     fn at_mostf(self, other: Self) -> Self;
     fn clampf(self, low: Self, high: Self) -> Self;
+    fn lanes_gt(self, other: Self) -> B32x<N>;
 
     unsafe fn floorf_unck(self) -> Self;
     unsafe fn ceilf_unck(self) -> Self;
@@ -188,14 +189,14 @@ where
     #[inline(always)]
     fn minf(self, other: Self) -> Self {
         // matches the behavior of minps
-        let lt = self.lanes_lt(other);
+        let lt = self.simd_lt(other);
         lt.select(self, other)
     }
 
     #[inline(always)]
     fn maxf(self, other: Self) -> Self {
         // matches the behavior of maxps
-        let gt = self.lanes_gt(other);
+        let gt = self.simd_gt(other);
         gt.select(self, other)
     }
 
@@ -217,13 +218,13 @@ where
     #[inline(always)]
     unsafe fn floorf_unck(self) -> Self {
         let i = self.to_i32_unck().to_f32();
-        i + self.lanes_lt(i).as_i32().to_f32()
+        i + self.simd_lt(i).as_i32().to_f32()
     }
 
     #[inline(always)]
     unsafe fn ceilf_unck(self) -> Self {
         let i = self.to_i32_unck().to_f32();
-        i - self.lanes_gt(i).as_i32().to_f32()
+        i - self.simd_gt(i).as_i32().to_f32()
     }
 
     #[inline(always)]
@@ -254,6 +255,10 @@ where
     #[inline(always)]
     fn lerpf(self, other: Self, t: F32) -> Self {
         Self::splat(1.0 - t) * self + Self::splat(t) * other
+    }
+    #[inline(always)]
+    fn lanes_gt(self, other: Self) -> B32x<N> {
+        self.simd_gt(other)
     }
 }
 
@@ -310,36 +315,6 @@ where
     fn new(v0: T, v1: T, v2: T, v3: T) -> Self {
         Self::from_array([v0, v1, v2, v3])
     }
-}
-
-impl<const N: usize> NumExt for U32x<N>
-where
-    LaneCount<N>: SupportedLaneCount,
-{
-    const ZERO: Self = Self::splat(0);
-    const ONE: Self = Self::splat(1);
-    const MIN: Self = Self::splat(U32::MIN);
-    const MAX: Self = Self::splat(U32::MAX);
-}
-
-impl<const N: usize> NumExt for I32x<N>
-where
-    LaneCount<N>: SupportedLaneCount,
-{
-    const ZERO: Self = Self::splat(0);
-    const ONE: Self = Self::splat(1);
-    const MIN: Self = Self::splat(I32::MIN);
-    const MAX: Self = Self::splat(I32::MAX);
-}
-
-impl<const N: usize> NumExt for F32x<N>
-where
-    LaneCount<N>: SupportedLaneCount,
-{
-    const ZERO: Self = Self::splat(0.0);
-    const ONE: Self = Self::splat(1.0);
-    const MIN: Self = Self::splat(F32::MIN);
-    const MAX: Self = Self::splat(F32::MAX);
 }
 
 impl<T, const N: usize> ScalarExt<T, N> for T

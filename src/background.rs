@@ -1,9 +1,4 @@
-use std::{
-    f32::consts::PI,
-    fs::{File},
-    io::BufReader,
-    sync::Arc,
-};
+use std::{f32::consts::PI, fs::File, io::BufReader, sync::Arc};
 
 use image::{codecs::hdr::HdrDecoder, Rgb};
 use rand::{prelude::ThreadRng, Rng};

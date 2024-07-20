@@ -1,0 +1,108 @@
+145 [18608] INFO perfrun.launcher <> - Launcher main begin
+153 [18608] INFO perfrun.launcher <> - MessageCatalogInit finished
+153 [18608] INFO perfrun.launcher <> - Launcher instance created
+153 [18608] INFO perfrun.launcher <> - argc = 7; cmdline = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\amplxe-runss.exe --ui-output-format xml --ui-output-fd 1556 --option-file D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\config\runss.options 
+174 [18608] INFO perfrun.launcher <> - New signal handler callback was added
+282 [18608] INFO perfrun.launcher <> - create msngr2::ICliToolContext
+283 [18608] INFO perfrun.launcher <> - create file finder object
+286 [18608] INFO perfrun.launcher <> - create a result directory: pattern = D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs pid = 4294967295
+292 [18608] INFO perfrun.launcher <> - create data directory = D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0
+292 [18608] INFO perfrun.launcher <> - Creating the master collection flag
+305 [18608] INFO perfrun.launcher <> - Done creating the master collection flag
+306 [21264] INFO perfrun.launcher <> - plugin [remoteplug] was disabled because it doesn't support the given collection type.
+308 [21264] INFO perfrun.sdk <> - Allocating TMU :D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0\systemcollector-27960-DESKTOP-22B0NE3.sc
+309 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+316 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+316 [21264] INFO perfrun.launcher <> - plugin [gpu] was disabled because it doesn't support the given collection type.
+316 [21264] INFO perfrun.launcher <> - plugin [etw.kernel] was disabled because it doesn't support the given collection type.
+317 [21264] INFO perfrun.launcher <> - plugin [etw.dx] was disabled because it doesn't support the given collection type.
+317 [21264] INFO perfrun.launcher <> - plugin [etw.wsa] was disabled because it doesn't support the given collection type.
+318 [21264] INFO perfrun.mrte <> - system-wide mode is 0
+319 [21264] INFO perfrun.mrte <> - Getting  mrte profiling environment ...
+495 [21264] INFO perfrun.mrte <> - INTEL_MRTE_DATA_DIR=D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0
+495 [21264] INFO perfrun.mrte <> - INTEL_MRTE_HOST_NAME=DESKTOP-22B0NE3
+495 [21264] INFO perfrun.mrte <> - JAVA_TOOL_OPTIONS=-agentlib:amplxe_tpssmrte_javaprof_1.0
+495 [21264] INFO perfrun.mrte <> - PATH=C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\runtime;C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\runtime;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\libnvvp;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\MATLAB\R2018b\bin;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Git LFS;C:\Program Files\dotnet\;C:\ProgramData\chocolatey\bin;;D:\Docker\resources\bin;C:\Users\migue\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\migue\AppData\Local\Programs\Python\Python311\;C:\Users\migue\.cargo\bin;D:\Programas\Microchip\mplabc18\v3.40\mpasm;D:\Programas\Microchip\mplabc18\v3.40\bin;C:\Users\migue\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Users\migue\AppData\Local\Programs\Python\Python38-32;C:\Users\migue\AppData\Local\Programs\Python\Python38-32\Scripts;C:\Users\migue\PythonScripts;C:\Users\migue\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\migue\AppData\Roaming\npm;C:\Program Files\Git\bin;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\libtorch\lib;C:\ffmpeg\bin;C:\hawc2-win32-master;C:\Users\migue\AppData\Local\spicetify;D:\Programas\miktex\miktex\bin\x64\;C:\Program Files\Inkscape;
+495 [21264] INFO perfrun.mrte <> - COR_ENABLE_PROFILING=1
+495 [21264] INFO perfrun.mrte <> - COR_PROFILER={AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+495 [21264] INFO perfrun.mrte <> - COMPLUS_ProfAPI_ProfilerCompatibilitySetting=EnableV2Profiler
+495 [21264] INFO perfrun.mrte <> - CORECLR_ENABLE_PROFILING=1
+495 [21264] INFO perfrun.mrte <> - CORECLR_PROFILER={AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+495 [21264] INFO perfrun.mrte <> - CORECLR_PROFILER_PATH=C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64/amplxe_samplingmrte_clrprof_1.0.dll
+495 [21264] INFO perfrun.mrte <> - INTEL_MRTE_PROFILER_MODE=mixed
+496 [21264] INFO perfrun.mrte <> - Data directory: D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0
+496 [21264] INFO perfrun.mrte <> - Mrte plugin is initialized
+496 [21264] INFO perfrun.launcher <> - plugin [emon] was disabled because it doesn't support the given collection type.
+496 [21264] INFO perfrun.launcher <> - plugin [cuscol] was disabled because it doesn't support the given collection type.
+497 [21264] INFO perfrun.launcher <> - plugin [stdsrc] was disabled because it doesn't support the given collection type.
+498 [21264] INFO perfrun.launcher <> - plugin [sep] was disabled because it doesn't support the given collection type.
+498 [21264] INFO perfrun.launcher <> - plugin [vtsspp] was disabled because it doesn't support the given collection type.
+498 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+498 [21264] INFO perfrun.launcher <> - plugin [aoclprofile] was disabled because it doesn't support the given collection type.
+498 [21264] INFO perfrun.tpss <> - initialize tpss controller
+499 [21264] INFO perfrun.tpss <> - configure collection mode: value = cpu:counters:nostack
+501 [21264] INFO perfrun.tpss <> - configure collection mode: value = cpu:stack
+501 [21264] INFO perfrun.tpss <> - default obj-size-min=1024
+501 [21264] INFO perfrun.tpss <> - default hash-table-size=0
+503 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [power] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [hwloc] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [ipmwatch] was disabled because it doesn't support the given collection type.
+503 [21264] INFO perfrun.launcher <> - plugin [os_counters] was disabled because it doesn't support the given collection type.
+504 [21264] INFO perfrun.launcher <> - plugin [l0_metrics] was disabled because it doesn't support the given collection type.
+504 [18608] INFO perfrun.launcher <> - set environment variable: PATH = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\runtime;C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\runtime;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\libnvvp;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\MATLAB\R2018b\bin;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Git LFS;C:\Program Files\dotnet\;C:\ProgramData\chocolatey\bin;;D:\Docker\resources\bin;C:\Users\migue\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\migue\AppData\Local\Programs\Python\Python311\;C:\Users\migue\.cargo\bin;D:\Programas\Microchip\mplabc18\v3.40\mpasm;D:\Programas\Microchip\mplabc18\v3.40\bin;C:\Users\migue\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Users\migue\AppData\Local\Programs\Python\Python38-32;C:\Users\migue\AppData\Local\Programs\Python\Python38-32\Scripts;C:\Users\migue\PythonScripts;C:\Users\migue\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\migue\AppData\Roaming\npm;C:\Program Files\Git\bin;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\libtorch\lib;C:\ffmpeg\bin;C:\hawc2-win32-master;C:\Users\migue\AppData\Local\spicetify;D:\Programas\miktex\miktex\bin\x64\;C:\Program Files\Inkscape;
+504 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_LIBITTNOTIFY32 = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\runtime\ittnotify_collector.dll
+504 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_LIBITTNOTIFY64 = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\runtime\ittnotify_collector.dll
+504 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_ITTNOTIFY_GROUPS = 
+504 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_JIT_PROFILER32 = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\runtime\ittnotify_collector.dll
+504 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_JIT_PROFILER64 = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\runtime\ittnotify_collector.dll
+505 [18608] INFO perfrun.launcher <> - set environment variable: VS_PROFILER = ittnotify_collector.dll
+505 [18608] INFO perfrun.launcher <> - set environment variable: OMP_TOOL_LIBRARIES = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\runtime\ittnotify_collector.dll;C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\runtime\ittnotify_collector.dll
+505 [18608] INFO perfrun.launcher <> - set environment variable: ENABLE_JITPROFILING = 1
+505 [18608] INFO perfrun.launcher <> - set environment variable: CL_CONFIG_USE_VTUNE = True
+505 [18608] INFO perfrun.launcher <> - set environment variable: KMP_FORKJOIN_FRAMES = 0
+505 [18608] INFO perfrun.launcher <> - set environment variable: KMP_FORKJOIN_FRAMES_MODE = 0
+505 [18608] INFO perfrun.launcher <> - set environment variable: OMP_TOOL = disabled
+505 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_MRTE_DATA_DIR = D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0
+505 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_MRTE_HOST_NAME = DESKTOP-22B0NE3
+506 [18608] INFO perfrun.launcher <> - set environment variable: JAVA_TOOL_OPTIONS = -agentlib:amplxe_tpssmrte_javaprof_1.0
+506 [18608] INFO perfrun.launcher <> - set environment variable: PATH = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\runtime;C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\runtime;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\libnvvp;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\MATLAB\R2018b\bin;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Git LFS;C:\Program Files\dotnet\;C:\ProgramData\chocolatey\bin;;D:\Docker\resources\bin;C:\Users\migue\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\migue\AppData\Local\Programs\Python\Python311\;C:\Users\migue\.cargo\bin;D:\Programas\Microchip\mplabc18\v3.40\mpasm;D:\Programas\Microchip\mplabc18\v3.40\bin;C:\Users\migue\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Users\migue\AppData\Local\Programs\Python\Python38-32;C:\Users\migue\AppData\Local\Programs\Python\Python38-32\Scripts;C:\Users\migue\PythonScripts;C:\Users\migue\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\migue\AppData\Roaming\npm;C:\Program Files\Git\bin;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\libtorch\lib;C:\ffmpeg\bin;C:\hawc2-win32-master;C:\Users\migue\AppData\Local\spicetify;D:\Programas\miktex\miktex\bin\x64\;C:\Program Files\Inkscape;
+506 [18608] INFO perfrun.launcher <> - set environment variable: COR_ENABLE_PROFILING = 1
+506 [18608] INFO perfrun.launcher <> - set environment variable: COR_PROFILER = {AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+507 [18608] INFO perfrun.launcher <> - set environment variable: COMPLUS_ProfAPI_ProfilerCompatibilitySetting = EnableV2Profiler
+507 [18608] INFO perfrun.launcher <> - set environment variable: CORECLR_ENABLE_PROFILING = 1
+507 [18608] INFO perfrun.launcher <> - set environment variable: CORECLR_PROFILER = {AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+507 [18608] INFO perfrun.launcher <> - set environment variable: CORECLR_PROFILER_PATH = C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64/amplxe_samplingmrte_clrprof_1.0.dll
+507 [18608] INFO perfrun.launcher <> - set environment variable: INTEL_MRTE_PROFILER_MODE = mixed
+509 [18608] INFO perfrun.launcher <> - RpcServer: run RPC server to handle requests
+517 [18608] INFO perfrun.sdk <> - IProcessUtil: the given executable 'D:\QBVH-Rust-Ray-Tracer-master\target\release\raytracer.exe' is valid.
+518 [18608] INFO perfrun.launcher <> - Launcher: command line to start before modification = D:\QBVH-Rust-Ray-Tracer-master\target\release\raytracer.exe -s hdri_sun -a 5 -r 640
+522 [18608] INFO perfrun.launcher <> - Launcher: command line to start after modification = C:\Program Files (x86)\Intel\oneAPI\vtune\2022.2.0\bin64\pin.exe -error_file D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0\pinerr.tpsslog -detach_reattach -probe -follow_execv -p32 C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\pin.exe -p64 C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\pin.exe -t64 C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin64\tpsstool.dll -t C:\Program Files (x86)\Intel\oneAPI\vtune\latest\bin32\tpsstool.dll -server_name tpss_ipc.27960 -prd_dir C:\Program Files (x86)\Intel\oneAPI\vtune\2022.2.0 -- D:\QBVH-Rust-Ray-Tracer-master\target\release\raytracer.exe -s hdri_sun -a 5 -r 640
+523 [18608] INFO perfrun.launcher <> - ProcessCreator object was created
+531 [18608] INFO perfrun.launcher <> - Launcher: the process was started in suspend mode
+533 [21264] INFO perfrun.itt <> - start itt controller for pid #10116
+535 [21264] INFO perfrun.tpss <> - start tpss controller for pid #10116
+594 [18608] INFO perfrun.launcher <> - Launcher: all plugins were started
+595 [18608] INFO perfrun.launcher <> - DirectoryMonitor object was created
+595 [18608] INFO perfrun.launcher <> - DirectoryMonitor: a callback was added
+595 [18608] INFO perfrun.launcher <> - DirectoryMonitor was started with pingTime = 1000
+595 [18608] INFO perfrun.launcher <> - DeadlineTimer is going to be constructed
+597 [18608] INFO perfrun.launcher <> - DeadlineTimer: a callback was added
+609 [18608] INFO perfrun.launcher <> - Launcher: resume the profiled application and  wait its termination or stop command
+5224 [18608] WARN perfrun.sdk <> - Unexpected exit status - 2, at file: C:\BB\INNLphep2w6r\b\tmpraubik\vcs\perfrun1\sdk\src\utils_win.cpp:541
+5225 [18608] INFO perfrun.launcher <> - Launcher: the profiled application was terminated  with exit code = 2
+5238 [21264] INFO perfrun.itt <> - detach itt controller
+5238 [21264] INFO perfrun.itt <> - detach itt controller done
+5238 [21264] INFO perfrun.tpss <> - stop tpss controller
+5239 [21264] INFO perfrun.sdk <> - De-allocating TMU: D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0\systemcollector-27960-DESKTOP-22B0NE3.sc
+5258 [21264] INFO perfrun.system <> - closed the system trace file: D:\QBVH-Rust-Ray-Tracer-master\raytracer\r000hs\data.0\systemcollector-27960-DESKTOP-22B0NE3.sc
+5259 [18608] INFO perfrun.launcher <> - Launcher: all plugins were stopped.
+5259 [18608] INFO perfrun.launcher <> - DeadlineTimer is going to be destroyed
+5259 [18608] INFO perfrun.launcher <> - DeadlineTimer was destroyed
+5259 [18608] INFO perfrun.launcher <> - DirectoryMonitor object was destroyed
+5259 [18608] WARN perfrun.launcher <> - Stop command is ignored because it is received when collection is already stopped, at file: C:\BB\INNLphep2w6r\b\tmpraubik\vcs\perfrun1\launcher\src\command_handler.cpp:226
+5261 [18608] INFO perfrun.launcher <> - Application exit code: 2
+5261 [18608] INFO perfrun.launcher <> - Exit code: 4

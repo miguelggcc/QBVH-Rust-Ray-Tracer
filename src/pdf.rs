@@ -12,7 +12,7 @@ pub enum PDFType<'a> {
     PDFCosine { pdf: PDFCosine },
     PDFSphere { pdf: PDFSphere },
     PDFBlinnPhongSpec { pdf: PDFBlinnPhongSpec },
-    PDFAshikhminShirley {pdf: PDFAshikhminShirley},
+    PDFAshikhminShirley { pdf: PDFAshikhminShirley },
 }
 
 impl PDFType<'_> {
@@ -38,28 +38,36 @@ impl PDFType<'_> {
             Self::PDFBlinnPhongSpec { pdf } => {
                 let random_normal =
                     ((pdf.r_in_direction * (-1.0)).norm() + direction.norm()).norm();
-                    let cosine = Vector3::dot(direction.norm(), pdf.onb_normal.w);
+                let cosine = Vector3::dot(direction.norm(), pdf.onb_normal.w);
                 let cosine_specular = fmax(Vector3::dot(random_normal, pdf.onb_normal.w), 0.0);
 
                 let normal_pdf =
                     (pdf.exponent + 1.0) / (2.0 * PI) * cosine_specular.powf(pdf.exponent);
 
-                    (cosine / PI).max(0.0)*(1.0-pdf.k_specular) + normal_pdf / (4.0 * Vector3::dot(pdf.r_in_direction.norm() * (-1.0), random_normal))*pdf.k_specular
+                (cosine / PI).max(0.0) * (1.0 - pdf.k_specular)
+                    + normal_pdf
+                        / (4.0 * Vector3::dot(pdf.r_in_direction.norm() * (-1.0), random_normal))
+                        * pdf.k_specular
             }
-            Self::PDFAshikhminShirley { pdf }=>{
+            Self::PDFAshikhminShirley { pdf } => {
                 let v = pdf.r_in_direction.norm() * (-1.0);
                 let l = direction.norm();
                 let h = (v + l).norm();
 
-                if Vector3::dot(l,pdf.onb_normal.w)<0.0{
+                if Vector3::dot(l, pdf.onb_normal.w) < 0.0 {
                     return 1.0;
                 }
-                let exponent = (pdf.nu*Vector3::dot(h,pdf.onb_normal.u).powi(2)+pdf.nv*Vector3::dot(h,pdf.onb_normal.v).powi(2))/(1.0-Vector3::dot(h,pdf.onb_normal.w ).powi(2));
 
-                let pdf_h = ((pdf.nu+1.0)*(pdf.nv+1.0)).sqrt()/(2.0*PI)*Vector3::dot(pdf.onb_normal.w,h).powf(exponent);
+                let exponent = (pdf.nu * Vector3::dot(h, pdf.onb_normal.u).powi(2)
+                    + pdf.nv * Vector3::dot(h, pdf.onb_normal.v).powi(2))
+                    / (1.0 - Vector3::dot(h, pdf.onb_normal.w).powi(2));
+                    
+                let pdf_h = ((pdf.nu + 1.0) * (pdf.nv + 1.0)).sqrt() / (2.0 * PI)
+                    * Vector3::dot(pdf.onb_normal.w, h).powf(exponent);
                 let cosine = Vector3::dot(l, pdf.onb_normal.w);
 
-                (1.0-pdf.k_specular)*(cosine).max(0.0)/PI+pdf.k_specular*pdf_h/(4.0*Vector3::dot(v,h))
+                (1.0 - pdf.k_specular) * (cosine).max(0.0) / PI
+                    + pdf.k_specular * pdf_h / (4.0 * Vector3::dot(v, h))
             }
         }
     }
@@ -69,27 +77,31 @@ impl PDFType<'_> {
             Self::PDFObj { pdf } => pdf.objects.choose(rng).unwrap().random(pdf.o, rng),
             Self::PDFCosine { pdf } => pdf.onb.local(Vector3::random_cosine_direction(rng)),
             Self::PDFSphere { pdf: _ } => Vector3::random_in_unit_sphere(rng),
-            Self::PDFBlinnPhongSpec { pdf } => if rng.gen::<f32>()<pdf.k_specular{
-            loop {
-                let direction = pdf
-                    .onb_reflected
-                    .local(Vector3::random_cosine_direction_exponent(pdf.exponent, rng));
-                if Vector3::dot(direction, pdf.onb_normal.w) < 0.0 {
-                    continue;
+            Self::PDFBlinnPhongSpec { pdf } => {
+                if rng.gen::<f32>() < pdf.k_specular {
+                    loop {
+                        let direction = pdf
+                            .onb_reflected
+                            .local(Vector3::random_cosine_direction_exponent(pdf.exponent, rng));
+                        if Vector3::dot(direction, pdf.onb_normal.w) < 0.0 {
+                            continue;
+                        }
+                        return direction;
+                    }
+                } else {
+                    pdf.onb_normal.local(Vector3::random_cosine_direction(rng))
                 }
-                return direction;
-            }} else{
-                pdf.onb_normal.local(Vector3::random_cosine_direction(rng))
-            },
-            Self::PDFAshikhminShirley { pdf }=>{
-              if rng.gen::<f32>()<pdf.k_specular{
-                let h = pdf.onb_normal.local(Vector3::random_as(pdf.nu, pdf.nv, rng));
-                let v = pdf.r_in_direction.norm();  
-               Vector3::reflect(v, h).norm()
-              } else{
-                pdf.onb_normal.local(Vector3::random_cosine_direction(rng))
-              }
-
+            }
+            Self::PDFAshikhminShirley { pdf } => {
+                if rng.gen::<f32>() < pdf.k_specular {
+                    let h = pdf
+                        .onb_normal
+                        .local(Vector3::random_as(pdf.nu, pdf.nv, rng));
+                    let v = pdf.r_in_direction.norm();
+                    Vector3::reflect(v, h)
+                } else {
+                    pdf.onb_normal.local(Vector3::random_cosine_direction(rng))
+                }
             }
         }
     }
@@ -136,7 +148,12 @@ pub struct PDFBlinnPhongSpec {
 }
 
 impl PDFBlinnPhongSpec {
-    pub fn new(r_in_direction: Vector3<f32>, normal: Vector3<f32>,k_specular:f32, exponent: f32) -> Self {
+    pub fn new(
+        r_in_direction: Vector3<f32>,
+        normal: Vector3<f32>,
+        k_specular: f32,
+        exponent: f32,
+    ) -> Self {
         let reflected = Vector3::reflect(r_in_direction.norm(), normal);
         let onb_reflected = ONB::build_from(reflected);
         let onb_normal = ONB::build_from(normal);
@@ -158,11 +175,23 @@ pub struct PDFAshikhminShirley {
     k_specular: f32,
 }
 
-impl PDFAshikhminShirley{
-    pub fn new(r_in_direction: Vector3<f32>, normal: Vector3<f32>, nu: f32, nv :f32, k_specular: f32)->Self{
+impl PDFAshikhminShirley {
+    pub fn new(
+        r_in_direction: Vector3<f32>,
+        normal: Vector3<f32>,
+        nu: f32,
+        nv: f32,
+        k_specular: f32,
+    ) -> Self {
         let onb_normal = ONB::build_from(normal);
 
-        Self { r_in_direction, onb_normal, nu, nv, k_specular }
+        Self {
+            r_in_direction,
+            onb_normal,
+            nu,
+            nv,
+            k_specular: k_specular.sqrt(),
+        }
     }
 }
 

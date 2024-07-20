@@ -28,16 +28,14 @@ impl Hittable for ConstantMedium {
         if let Some(mut hit1) = self.boundary.hit(r, f32::MIN, f32::MAX) {
             if let Some(mut hit2) = self.boundary.hit(r, hit1.t + 0.0001, f32::MAX) {
                 hit1.t = hit1.t.max(t_min);
-                
+
                 hit2.t = hit2.t.min(t_max);
-                
 
                 if hit1.t >= hit2.t {
                     return None;
                 }
 
                 hit1.t = hit1.t.max(0.0);
-                
 
                 let ray_length = r.direction.magnitude();
                 let distance_inside_boundary = (hit2.t - hit1.t) * ray_length;

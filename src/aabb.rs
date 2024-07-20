@@ -28,7 +28,7 @@ impl AABB {
 
         hit_max > hit_min
     }*/
-#[inline(always)]
+    #[inline(always)]
     pub fn centroid2(&self, axis: Axis) -> f32 {
         self.minimum.get_axis(axis) + self.maximum.get_axis(axis)
     }
